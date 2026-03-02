@@ -50,13 +50,13 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
   }, [camera, gl])
 
   const onPointerDown = useCallback((e: any) => {
-    // Only handle left-click; right-click is for camera/perspective — do not start drag or selection
+    // Only handle left-click; right-click is for camera/perspective
     if (e.button !== 0) return
-    // Also skip if camera is already dragging (perspective rotation in progress)
     if (useViewer.getState().cameraDragging) return
 
     e.stopPropagation()
     gl.domElement.setPointerCapture(e.pointerId)
+
     const worldPos = getWorldPos(e.nativeEvent)
     dragState.current = {
       active: false,
@@ -65,49 +65,59 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       originalStart: [...node.start] as [number, number],
       originalEnd: [...node.end] as [number, number],
     }
-    // Originale handler weiterleiten
-    handlers.onPointerDown?.(e)
-  }, [node.start, node.end, getWorldPos, gl, handlers])
 
-  const onPointerMove = useCallback((e: any) => {
-    if (!dragState.current) return
-    const dx = e.clientX - dragState.current.startMouse.x
-    const dy = e.clientY - dragState.current.startMouse.y
-    const dist = Math.sqrt(dx * dx + dy * dy)
+    // Attach move/up to window so fast mouse movement never loses the drag
+    const onWindowMove = (ev: PointerEvent) => {
+      if (!dragState.current) return
+      const dx = ev.clientX - dragState.current.startMouse.x
+      const dy = ev.clientY - dragState.current.startMouse.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
 
-    if (!dragState.current.active && dist < DRAG_THRESHOLD) return
-    dragState.current.active = true
-    document.body.style.cursor = 'grabbing'
-    e.stopPropagation()
+      if (!dragState.current.active && dist < DRAG_THRESHOLD) return
+      dragState.current.active = true
+      document.body.style.cursor = 'grabbing'
 
-    const worldPos = getWorldPos(e.nativeEvent)
-    const deltaX = worldPos.x - dragState.current.startWorld.x
-    const deltaZ = worldPos.z - dragState.current.startWorld.z
+      const worldPos = getWorldPos(ev)
+      const deltaX = worldPos.x - dragState.current.startWorld.x
+      const deltaZ = worldPos.z - dragState.current.startWorld.z
 
-    const [snappedStartX, snappedStartZ] = applySnap(
-      dragState.current.originalStart[0] + deltaX,
-      dragState.current.originalStart[1] + deltaZ,
-    )
-    const [snappedEndX, snappedEndZ] = applySnap(
-      dragState.current.originalEnd[0] + deltaX,
-      dragState.current.originalEnd[1] + deltaZ,
-    )
-    useScene.getState().updateNode(node.id as AnyNodeId, {
-      start: [snappedStartX, snappedStartZ],
-      end: [snappedEndX, snappedEndZ],
-    })
-  }, [node.id, getWorldPos])
-
-  const onPointerUp = useCallback((e: any) => {
-    if (!dragState.current) return
-    gl.domElement.releasePointerCapture(e.pointerId)
-    document.body.style.cursor = ''
-    if (!dragState.current.active) {
-      // War ein Klick → originale handler
-      handlers.onPointerUp?.(e)
+      const [snappedStartX, snappedStartZ] = applySnap(
+        dragState.current.originalStart[0] + deltaX,
+        dragState.current.originalStart[1] + deltaZ,
+      )
+      const [snappedEndX, snappedEndZ] = applySnap(
+        dragState.current.originalEnd[0] + deltaX,
+        dragState.current.originalEnd[1] + deltaZ,
+      )
+      useScene.getState().updateNode(node.id as AnyNodeId, {
+        start: [snappedStartX, snappedStartZ],
+        end: [snappedEndX, snappedEndZ],
+      })
+      useScene.getState().dirtyNodes.add(node.id as AnyNodeId)
     }
-    dragState.current = null
-  }, [gl, handlers])
+
+    const onWindowUp = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', onWindowMove)
+      window.removeEventListener('pointerup', onWindowUp)
+      gl.domElement.releasePointerCapture(ev.pointerId)
+      document.body.style.cursor = ''
+
+      if (dragState.current && !dragState.current.active) {
+        // Was a click → forward to selection handler
+        handlers.onPointerUp?.(e)
+      }
+      dragState.current = null
+    }
+
+    window.addEventListener('pointermove', onWindowMove)
+    window.addEventListener('pointerup', onWindowUp)
+
+    handlers.onPointerDown?.(e)
+  }, [node.id, node.start, node.end, getWorldPos, gl, handlers])
+
+  // onPointerMove / onPointerUp no longer needed on the mesh (handled via window listeners)
+  const onPointerMove = useCallback((_e: any) => {}, [])
+  const onPointerUp = useCallback((_e: any) => {}, [])
 
   return (
     <mesh ref={ref} castShadow receiveShadow visible={node.visible}>
