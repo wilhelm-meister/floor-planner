@@ -1157,15 +1157,19 @@ function ContentSection() {
     );
   }
 
-  // Filter elements based on phase
+  // Filter elements based on phase:
+  // structure → walls, slabs, ceilings, roofs (no floor items)
+  // furnish   → only floor items (direct level children of type 'item')
   const elementChildren = level.children.filter((childId) => {
     const childNode = nodes[childId];
     if (!childNode || childNode.type === "zone") return false;
 
-    // We no longer filter out structural nodes in furnish mode or furnish nodes in structure mode
-    // This allows nested items (like lights in a ceiling or cabinetry on a wall) to remain visible
-    // and selectable in both modes, ensuring seamless transition in the tree view.
-    return true;
+    if (phase === "furnish") {
+      return childNode.type === "item";
+    }
+
+    // Structure phase: everything except floor-placed furniture items
+    return childNode.type !== "item";
   });
 
   if (elementChildren.length === 0) {
