@@ -66,58 +66,48 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       originalEnd: [...node.end] as [number, number],
     }
 
-    // Attach move/up to window so fast mouse movement never loses the drag
+    // Window-level pointermove: fires even when pointer moves outside the mesh (fast drag)
     const onWindowMove = (ev: PointerEvent) => {
       if (!dragState.current) return
       const dx = ev.clientX - dragState.current.startMouse.x
       const dy = ev.clientY - dragState.current.startMouse.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (!dragState.current.active && dist < DRAG_THRESHOLD) return
+      if (!dragState.current.active && Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return
       dragState.current.active = true
       document.body.style.cursor = 'grabbing'
 
-      const worldPos = getWorldPos(ev)
-      const deltaX = worldPos.x - dragState.current.startWorld.x
-      const deltaZ = worldPos.z - dragState.current.startWorld.z
-
-      const [snappedStartX, snappedStartZ] = applySnap(
-        dragState.current.originalStart[0] + deltaX,
-        dragState.current.originalStart[1] + deltaZ,
-      )
-      const [snappedEndX, snappedEndZ] = applySnap(
-        dragState.current.originalEnd[0] + deltaX,
-        dragState.current.originalEnd[1] + deltaZ,
-      )
-      useScene.getState().updateNode(node.id as AnyNodeId, {
-        start: [snappedStartX, snappedStartZ],
-        end: [snappedEndX, snappedEndZ],
-      })
+      const wp = getWorldPos(ev)
+      const deltaX = wp.x - dragState.current.startWorld.x
+      const deltaZ = wp.z - dragState.current.startWorld.z
+      const [sx, sz] = applySnap(dragState.current.originalStart[0] + deltaX, dragState.current.originalStart[1] + deltaZ)
+      const [ex, ez] = applySnap(dragState.current.originalEnd[0] + deltaX, dragState.current.originalEnd[1] + deltaZ)
+      useScene.getState().updateNode(node.id as AnyNodeId, { start: [sx, sz], end: [ex, ez] })
       useScene.getState().dirtyNodes.add(node.id as AnyNodeId)
     }
 
-    const onWindowUp = (ev: PointerEvent) => {
+    const cleanup = () => {
       window.removeEventListener('pointermove', onWindowMove)
-      window.removeEventListener('pointerup', onWindowUp)
-      gl.domElement.releasePointerCapture(ev.pointerId)
-      document.body.style.cursor = ''
-
-      if (dragState.current && !dragState.current.active) {
-        // Was a click → forward to selection handler
-        handlers.onPointerUp?.(e)
-      }
-      dragState.current = null
+      window.removeEventListener('pointerup', cleanup)
     }
-
     window.addEventListener('pointermove', onWindowMove)
-    window.addEventListener('pointerup', onWindowUp)
+    window.addEventListener('pointerup', cleanup)
 
     handlers.onPointerDown?.(e)
   }, [node.id, node.start, node.end, getWorldPos, gl, handlers])
 
-  // onPointerMove / onPointerUp no longer needed on the mesh (handled via window listeners)
+  // Mesh onPointerMove kept as no-op (window listener handles it)
   const onPointerMove = useCallback((_e: any) => {}, [])
-  const onPointerUp = useCallback((_e: any) => {}, [])
+
+  // Mesh onPointerUp: still needed for click→select (R3F ThreeEvent required by useNodeEvents)
+  const onPointerUp = useCallback((e: any) => {
+    if (!dragState.current) return
+    gl.domElement.releasePointerCapture(e.pointerId)
+    document.body.style.cursor = ''
+    if (!dragState.current.active) {
+      // Was a click, not a drag → trigger selection
+      handlers.onPointerUp?.(e)
+    }
+    dragState.current = null
+  }, [gl, handlers])
 
   return (
     <mesh ref={ref} castShadow receiveShadow visible={node.visible}>
