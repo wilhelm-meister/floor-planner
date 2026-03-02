@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
 import { Plane, Raycaster, type Mesh, Vector2, Vector3 } from 'three'
 import { applySnap } from '../../../lib/snap'
+import useViewer from '../../../store/use-viewer'
 import { useNodeEvents } from '../../../hooks/use-node-events'
 import { NodeRenderer } from '../node-renderer'
 
