@@ -1,6 +1,7 @@
 "use client";
 
 import useEditor from "@/store/use-editor";
+import { useViewer } from "@pascal-app/viewer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/primitives/tooltip";
 import { Magnet } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,8 +9,16 @@ import { cn } from "@/lib/utils";
 export function SnapToggle() {
   const snapEnabled = useEditor((s) => s.snapEnabled);
   const snapSize = useEditor((s) => s.snapSize);
-  const setSnapEnabled = useEditor((s) => s.setSnapEnabled);
-  const setSnapSize = useEditor((s) => s.setSnapSize);
+
+  // Write to both stores: useEditor (wall-tool, wall-edge-handles) + useViewer (applySnap in wall-renderer)
+  const setSnapEnabled = (enabled: boolean) => {
+    useEditor.getState().setSnapEnabled(enabled);
+    useViewer.getState().setSnapEnabled(enabled);
+  };
+  const setSnapSize = (size: 0.5 | 0.25) => {
+    useEditor.getState().setSnapSize(size);
+    useViewer.getState().setSnapSize(size);
+  };
 
   return (
     <div className="flex items-center gap-0.5">

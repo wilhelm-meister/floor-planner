@@ -49,6 +49,11 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
   }, [camera, gl])
 
   const onPointerDown = useCallback((e: any) => {
+    // Only handle left-click; right-click is for camera/perspective — do not start drag or selection
+    if (e.button !== 0) return
+    // Also skip if camera is already dragging (perspective rotation in progress)
+    if (useViewer.getState().cameraDragging) return
+
     e.stopPropagation()
     gl.domElement.setPointerCapture(e.pointerId)
     const worldPos = getWorldPos(e.nativeEvent)
