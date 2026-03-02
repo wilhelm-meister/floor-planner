@@ -1,88 +1,85 @@
+'use client'
+
 import { emitter, type GridEvent, type AnyNodeId, type WallNode, useScene } from '@pascal-app/core'
-import { Html } from '@react-three/drei'
+import { Html, Line } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
 import useEditor from '@/store/use-editor'
 
 type HandleTarget = 'start' | 'end' | null
 
-const HANDLE_Y = 0.5
-const HANDLE_RADIUS = 0.1
+const HANDLE_Y = 0.05
+const HANDLE_RADIUS = 0.12
+const LINE_Y = 0.05
 
 interface WallEdgeHandlesProps {
   wallId: string
 }
 
 /**
- * Wall edge handles - renders draggable spheres at the start and end of a selected wall.
- * Allows resizing walls by dragging the endpoints.
+ * Wall edge handles — shows a glowing yellow line along the selected wall.
+ * Dragging an endpoint updates the wall in real-time.
  */
 export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const node = useScene((s) => s.nodes[wallId as AnyNodeId] as WallNode | undefined)
 
   const [dragTarget, setDragTarget] = useState<HandleTarget>(null)
   const [hoveredHandle, setHoveredHandle] = useState<HandleTarget>(null)
-  const [previewStart, setPreviewStart] = useState<[number, number] | null>(null)
-  const [previewEnd, setPreviewEnd] = useState<[number, number] | null>(null)
+  const [liveStart, setLiveStart] = useState<[number, number] | null>(null)
+  const [liveEnd, setLiveEnd] = useState<[number, number] | null>(null)
   const [wallLength, setWallLength] = useState<number | null>(null)
 
-  // Refs to avoid stale closures in event handlers
   const dragTargetRef = useRef<HandleTarget>(null)
   const nodeRef = useRef(node)
   nodeRef.current = node
-  const previewStartRef = useRef<[number, number] | null>(null)
-  const previewEndRef = useRef<[number, number] | null>(null)
 
-  // Listen to grid:move to update preview positions during drag
+  // Real-time drag: update wall geometry live on every grid:move
   useEffect(() => {
     const onGridMove = (event: GridEvent) => {
       if (!dragTargetRef.current || !nodeRef.current) return
 
       const { snapEnabled, snapSize } = useEditor.getState()
       const snap = (v: number) => snapEnabled ? Math.round(v / snapSize) * snapSize : v
-      const snappedX = snap(event.position[0])
-      const snappedZ = snap(event.position[2])
-      const pos: [number, number] = [snappedX, snappedZ]
+      const pos: [number, number] = [snap(event.position[0]), snap(event.position[2])]
+      const n = nodeRef.current
 
-      const currentNode = nodeRef.current
+      let newStart = n.start
+      let newEnd = n.end
 
       if (dragTargetRef.current === 'end') {
-        previewEndRef.current = pos
-        setPreviewEnd(pos)
-        const dx = pos[0] - currentNode.start[0]
-        const dz = pos[1] - currentNode.start[1]
+        newEnd = pos
+        setLiveEnd(pos)
+        const dx = pos[0] - n.start[0]
+        const dz = pos[1] - n.start[1]
         setWallLength(Math.round(Math.sqrt(dx * dx + dz * dz) * 100) / 100)
-      } else if (dragTargetRef.current === 'start') {
-        previewStartRef.current = pos
-        setPreviewStart(pos)
-        const dx = currentNode.end[0] - pos[0]
-        const dz = currentNode.end[1] - pos[1]
+      } else {
+        newStart = pos
+        setLiveStart(pos)
+        const dx = n.end[0] - pos[0]
+        const dz = n.end[1] - pos[1]
         setWallLength(Math.round(Math.sqrt(dx * dx + dz * dz) * 100) / 100)
       }
+
+      // Update wall in real-time so the 3D geometry rebuilds immediately
+      const scene = useScene.getState()
+      scene.updateNode(wallId as AnyNodeId, {
+        start: newStart,
+        end: newEnd,
+      })
+      scene.dirtyNodes.add(wallId as AnyNodeId)
     }
 
     emitter.on('grid:move', onGridMove)
     return () => emitter.off('grid:move', onGridMove)
-  }, [])
+  }, [wallId])
 
-  // Commit the drag result on pointer up
+  // Commit on pointer up (geometry already up to date, just clean up state)
   useEffect(() => {
     if (!dragTarget) return
 
-    const onPointerUp = (e: PointerEvent) => {
-      const currentNode = nodeRef.current
-      if (currentNode) {
-        const updates: Partial<WallNode> = {}
-        if (dragTargetRef.current === 'end' && previewEndRef.current) {
-          updates.end = previewEndRef.current
-        } else if (dragTargetRef.current === 'start' && previewStartRef.current) {
-          updates.start = previewStartRef.current
-        }
-        if (Object.keys(updates).length > 0) {
-          useScene.getState().updateNode(wallId as AnyNodeId, updates)
-        }
-      }
+    const onPointerUp = () => {
+      useScene.temporal.getState().resume()
 
-      // Suppress the follow-up click so we don't accidentally deselect the wall
+      // Suppress follow-up click so we don't accidentally deselect
       const suppressClick = (ce: MouseEvent) => {
         ce.stopImmediatePropagation()
         ce.preventDefault()
@@ -91,39 +88,50 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       window.addEventListener('click', suppressClick, true)
       requestAnimationFrame(() => window.removeEventListener('click', suppressClick, true))
 
-      // Reset state
       dragTargetRef.current = null
-      previewStartRef.current = null
-      previewEndRef.current = null
       setDragTarget(null)
-      setPreviewStart(null)
-      setPreviewEnd(null)
+      setLiveStart(null)
+      setLiveEnd(null)
       setWallLength(null)
     }
 
     window.addEventListener('pointerup', onPointerUp, true)
     return () => window.removeEventListener('pointerup', onPointerUp, true)
-  }, [dragTarget, wallId])
+  }, [dragTarget])
 
   if (!node) return null
 
-  const startPos = previewStart ?? node.start
-  const endPos = previewEnd ?? node.end
+  // Use live positions during drag, otherwise use node positions
+  const startPos = liveStart ?? node.start
+  const endPos = liveEnd ?? node.end
+
   const midX = (startPos[0] + endPos[0]) / 2
   const midZ = (startPos[1] + endPos[1]) / 2
 
-  const getHandleColor = (target: 'start' | 'end') => {
-    if (dragTarget === target) return '#f59e0b'
-    if (hoveredHandle === target) return '#fcd34d'
-    return '#94a3b8'
-  }
+  const isDragging = dragTarget !== null
+  const lineColor = isDragging ? '#facc15' : '#fbbf24'  // brighter yellow while dragging
+  const lineWidth = isDragging ? 4 : 3
 
-  const getEmissive = (target: 'start' | 'end') => {
-    return dragTarget === target ? '#b45309' : '#000000'
+  const getHandleColor = (target: 'start' | 'end') => {
+    if (dragTarget === target) return '#facc15'
+    if (hoveredHandle === target) return '#fde68a'
+    return '#fbbf24'
   }
 
   return (
     <group>
+      {/* Glowing yellow line along the full wall */}
+      <Line
+        points={[
+          [startPos[0], LINE_Y, startPos[1]],
+          [endPos[0], LINE_Y, endPos[1]],
+        ]}
+        color={lineColor}
+        lineWidth={lineWidth}
+        transparent
+        opacity={0.92}
+      />
+
       {/* Start handle */}
       <mesh
         position={[startPos[0], HANDLE_Y, startPos[1]]}
@@ -132,25 +140,20 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           e.stopPropagation()
           dragTargetRef.current = 'start'
           setDragTarget('start')
-          setPreviewStart(null)
-          previewStartRef.current = null
+          setLiveStart(null)
           useScene.temporal.getState().pause()
         }}
-        onPointerEnter={(e) => {
-          e.stopPropagation()
-          setHoveredHandle('start')
-        }}
-        onPointerLeave={(e) => {
-          e.stopPropagation()
-          setHoveredHandle(null)
-        }}
+        onPointerEnter={(e) => { e.stopPropagation(); setHoveredHandle('start') }}
+        onPointerLeave={(e) => { e.stopPropagation(); setHoveredHandle(null) }}
         onClick={(e) => e.stopPropagation()}
       >
         <sphereGeometry args={[HANDLE_RADIUS, 16, 16]} />
         <meshStandardMaterial
           color={getHandleColor('start')}
-          emissive={getEmissive('start')}
-          emissiveIntensity={0.5}
+          emissive={getHandleColor('start')}
+          emissiveIntensity={dragTarget === 'start' ? 0.8 : 0.4}
+          roughness={0.2}
+          metalness={0.1}
         />
       </mesh>
 
@@ -162,25 +165,20 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           e.stopPropagation()
           dragTargetRef.current = 'end'
           setDragTarget('end')
-          setPreviewEnd(null)
-          previewEndRef.current = null
+          setLiveEnd(null)
           useScene.temporal.getState().pause()
         }}
-        onPointerEnter={(e) => {
-          e.stopPropagation()
-          setHoveredHandle('end')
-        }}
-        onPointerLeave={(e) => {
-          e.stopPropagation()
-          setHoveredHandle(null)
-        }}
+        onPointerEnter={(e) => { e.stopPropagation(); setHoveredHandle('end') }}
+        onPointerLeave={(e) => { e.stopPropagation(); setHoveredHandle(null) }}
         onClick={(e) => e.stopPropagation()}
       >
         <sphereGeometry args={[HANDLE_RADIUS, 16, 16]} />
         <meshStandardMaterial
           color={getHandleColor('end')}
-          emissive={getEmissive('end')}
-          emissiveIntensity={0.5}
+          emissive={getHandleColor('end')}
+          emissiveIntensity={dragTarget === 'end' ? 0.8 : 0.4}
+          roughness={0.2}
+          metalness={0.1}
         />
       </mesh>
 
@@ -188,7 +186,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       {wallLength !== null && (
         <group position={[midX, HANDLE_Y + 0.6, midZ]}>
           <Html center zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-            <div className="rounded-md border border-amber-400 bg-amber-500/90 px-2 py-0.5 text-xs font-mono font-medium text-white shadow-md backdrop-blur-sm whitespace-nowrap">
+            <div className="rounded-md border border-yellow-400 bg-yellow-500/90 px-2 py-0.5 text-xs font-mono font-medium text-black shadow-md backdrop-blur-sm whitespace-nowrap">
               {wallLength.toFixed(2)} m
             </div>
           </Html>
