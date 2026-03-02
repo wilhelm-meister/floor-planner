@@ -5,6 +5,7 @@ import { Html } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
 import { DoubleSide, Shape, ShapeGeometry, Vector3 } from 'three'
 import useEditor from '@/store/use-editor'
+import { sfxEmitter } from '@/lib/sfx-bus'
 
 type HandleTarget = 'start' | 'end' | null
 
@@ -42,6 +43,8 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
 
   // Track drag position via grid:move — only update React state (no store writes)
   useEffect(() => {
+    let lastSnapKey: string | null = null
+
     const onGridMove = (event: GridEvent) => {
       if (!dragTargetRef.current || !nodeRef.current) return
 
@@ -62,6 +65,13 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
         const dx = n.end[0] - pos[0]
         const dz = n.end[1] - pos[1]
         setWallLength(Math.round(Math.sqrt(dx * dx + dz * dz) * 100) / 100)
+      }
+
+      // Snap sound when position changes
+      const snapKey = `${pos[0]},${pos[1]}`
+      if (snapKey !== lastSnapKey) {
+        lastSnapKey = snapKey
+        sfxEmitter.emit('sfx:grid-snap')
       }
     }
 
@@ -86,6 +96,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           const scene = useScene.getState()
           scene.updateNode(wallId as AnyNodeId, updates)
           scene.dirtyNodes.add(wallId as AnyNodeId)
+          sfxEmitter.emit('sfx:structure-build')
         }
       }
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Plane, Raycaster, type Mesh, Vector2, Vector3 } from 'three'
 import { applySnap } from '../../../lib/snap'
 import useViewer from '../../../store/use-viewer'
+import { emitter } from '@pascal-app/core'
 import { useNodeEvents } from '../../../hooks/use-node-events'
 import { NodeRenderer } from '../node-renderer'
 
@@ -67,6 +68,7 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
     }
 
     // Window-level pointermove: fires even when pointer moves outside the mesh (fast drag)
+    let lastSnapPos: string | null = null
     const onWindowMove = (ev: PointerEvent) => {
       if (!dragState.current) return
       const dx = ev.clientX - dragState.current.startMouse.x
@@ -82,14 +84,24 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       const [ex, ez] = applySnap(dragState.current.originalEnd[0] + deltaX, dragState.current.originalEnd[1] + deltaZ)
       useScene.getState().updateNode(node.id as AnyNodeId, { start: [sx, sz], end: [ex, ez] })
       useScene.getState().dirtyNodes.add(node.id as AnyNodeId)
+
+      // Snap sound when position changes
+      const snapKey = `${sx},${sz}`
+      if (snapKey !== lastSnapPos) {
+        lastSnapPos = snapKey
+        emitter.emit('sfx:grid-snap', undefined)
+      }
     }
 
-    const cleanup = () => {
+    const cleanup = (ev: PointerEvent) => {
       window.removeEventListener('pointermove', onWindowMove)
       window.removeEventListener('pointerup', cleanup)
+      if (dragState.current?.active) {
+        emitter.emit('sfx:structure-move', undefined)
+      }
     }
     window.addEventListener('pointermove', onWindowMove)
-    window.addEventListener('pointerup', cleanup)
+    window.addEventListener('pointerup', cleanup as EventListener)
 
     handlers.onPointerDown?.(e)
   }, [node.id, node.start, node.end, getWorldPos, gl, handlers])

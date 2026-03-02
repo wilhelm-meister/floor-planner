@@ -1,4 +1,5 @@
 import mitt from 'mitt'
+import { emitter } from '@pascal-app/core'
 import { playSFX } from './sfx-player'
 
 /**
@@ -33,6 +34,11 @@ export function initSFXBus() {
   sfxEmitter.on('sfx:item-rotate', () => playSFX('itemRotate'))
   sfxEmitter.on('sfx:structure-build', () => playSFX('structureBuild'))
   sfxEmitter.on('sfx:structure-delete', () => playSFX('structureDelete'))
+
+  // Bridge core emitter SFX events (from viewer package, e.g. wall drag/move)
+  emitter.on('sfx:grid-snap', () => playSFX('gridSnap'))
+  emitter.on('sfx:structure-build', () => playSFX('structureBuild'))
+  emitter.on('sfx:structure-move', () => playSFX('structureBuild'))
 }
 
 /**

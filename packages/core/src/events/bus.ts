@@ -73,6 +73,12 @@ type ToolEvents = {
   'tool:cancel': undefined
 }
 
+type SfxEvents = {
+  'sfx:grid-snap': undefined
+  'sfx:structure-build': undefined
+  'sfx:structure-move': undefined
+}
+
 type EditorEvents = GridEvents &
   NodeEvents<'wall', WallEvent> &
   NodeEvents<'item', ItemEvent> &
@@ -86,6 +92,7 @@ type EditorEvents = GridEvents &
   NodeEvents<'window', WindowEvent> &
   NodeEvents<'door', DoorEvent> &
   CameraControlEvents &
-  ToolEvents
+  ToolEvents &
+  SfxEvents
 
 export const emitter = mitt<EditorEvents>()
