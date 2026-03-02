@@ -58,12 +58,27 @@ export function RoofPanel() {
         <SliderControl
           label="Height"
           value={Math.round(node.height * 100) / 100}
-          onChange={(v) => handleUpdate({ height: v })}
+          onChange={(v) => handleUpdate({ height: Math.max(0.1, v) })}
           min={0.1}
           max={10}
           precision={2}
           step={0.1}
           unit="m"
+        />
+        <SliderControl
+          label="Pitch"
+          value={Math.round(Math.atan(node.height / ((node.leftWidth + node.rightWidth) / 2)) * (180 / Math.PI))}
+          onChange={(deg) => {
+            const clampedDeg = Math.max(1, Math.min(75, deg))
+            const halfWidth = (node.leftWidth + node.rightWidth) / 2
+            const newHeight = Math.round(halfWidth * Math.tan(clampedDeg * Math.PI / 180) * 100) / 100
+            handleUpdate({ height: Math.max(0.1, newHeight) })
+          }}
+          min={1}
+          max={75}
+          precision={0}
+          step={1}
+          unit="°"
         />
       </PanelSection>
 
