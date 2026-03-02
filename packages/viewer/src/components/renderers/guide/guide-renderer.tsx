@@ -1,8 +1,12 @@
-import { type GuideNode, useRegistry } from '@pascal-app/core'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { DoubleSide, MeshBasicMaterial, type Group, type Texture, TextureLoader } from 'three'
+import { type AnyNodeId, type GuideNode, useRegistry, useScene } from '@pascal-app/core'
+import { useThree } from '@react-three/fiber'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { DoubleSide, MeshBasicMaterial, Plane, Raycaster, type Group, type Texture, TextureLoader, Vector2, Vector3 } from 'three'
+import { applySnap } from '../../../lib/snap'
 import { useAssetUrl } from '../../../hooks/use-asset-url'
 import useViewer from '../../../store/use-viewer'
+
+const DRAG_PLANE = new Plane(new Vector3(0, 1, 0), 0) // horizontale Y=0 Plane
 
 export const GuideRenderer = ({ node }: { node: GuideNode }) => {
   const showGuides = useViewer((s) => s.showGuides)
@@ -12,6 +16,23 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
   const resolvedUrl = useAssetUrl(node.url)
   const [tex, setTex] = useState<Texture | null>(null)
   const [aspect, setAspect] = useState(1)
+
+  // Drag state
+  const dragging = useRef(false)
+  const dragOffset = useRef(new Vector3())
+  const { camera, gl } = useThree()
+
+  // Fallback: sicherstellen dass Drag immer endet, auch wenn R3F onPointerUp ausbleibt
+  useEffect(() => {
+    const onUp = () => {
+      if (dragging.current) {
+        dragging.current = false
+        document.body.style.cursor = ''
+      }
+    }
+    window.addEventListener('pointerup', onUp)
+    return () => window.removeEventListener('pointerup', onUp)
+  }, [])
 
   useEffect(() => {
     if (!resolvedUrl) return
@@ -45,14 +66,62 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
     })
   }, [tex, node.opacity])
 
+  const getWorldPos = useCallback((e: PointerEvent) => {
+    const rect = gl.domElement.getBoundingClientRect()
+    const ndc = new Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1,
+    )
+    const ray = new Raycaster()
+    ray.setFromCamera(ndc, camera)
+    const hit = new Vector3()
+    ray.ray.intersectPlane(DRAG_PLANE, hit)
+    return hit
+  }, [camera, gl])
+
+  const onPointerDown = useCallback((e: any) => {
+    e.stopPropagation()
+    dragging.current = true
+    gl.domElement.setPointerCapture(e.pointerId)
+    const worldPos = getWorldPos(e.nativeEvent)
+    dragOffset.current.set(
+      node.position[0] - worldPos.x,
+      0,
+      node.position[2] - worldPos.z,
+    )
+    document.body.style.cursor = 'grabbing'
+  }, [node.position, getWorldPos, gl])
+
+  const onPointerMove = useCallback((e: any) => {
+    if (!dragging.current) return
+    const worldPos = getWorldPos(e.nativeEvent)
+    const [newX, newZ] = applySnap(
+      worldPos.x + dragOffset.current.x,
+      worldPos.z + dragOffset.current.z,
+    )
+    useScene.getState().updateNode(node.id as AnyNodeId, {
+      position: [newX, node.position[1], newZ],
+    })
+  }, [node.id, node.position, getWorldPos])
+
+  const onPointerUp = useCallback((e: any) => {
+    if (!dragging.current) return
+    dragging.current = false
+    gl.domElement.releasePointerCapture(e.pointerId)
+    document.body.style.cursor = ''
+  }, [gl])
+
   return (
-    <group ref={ref} visible={showGuides}>
+    <group ref={ref} visible={showGuides} position={node.position}>
       {material && (
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
           position={[0, 0.02, 0]}
           material={material}
           frustumCulled={false}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
         >
           <planeGeometry args={[planeW, planeH]} />
         </mesh>

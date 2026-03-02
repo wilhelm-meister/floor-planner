@@ -1,19 +1,18 @@
 "use client";
 
-import useEditor from "@/store/use-editor";
+import { useViewer } from "@pascal-app/viewer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/primitives/tooltip";
 import { Magnet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function SnapToggle() {
-  const snapEnabled = useEditor((s) => s.snapEnabled);
-  const snapSize = useEditor((s) => s.snapSize);
-  const setSnapEnabled = useEditor((s) => s.setSnapEnabled);
-  const setSnapSize = useEditor((s) => s.setSnapSize);
+  const snapEnabled = useViewer((s) => s.snapEnabled);
+  const snapSize = useViewer((s) => s.snapSize);
+  const setSnapEnabled = useViewer((s) => s.setSnapEnabled);
+  const setSnapSize = useViewer((s) => s.setSnapSize);
 
   return (
     <div className="flex items-center gap-0.5">
-      {/* Snap ein/aus */}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -31,7 +30,6 @@ export function SnapToggle() {
         <TooltipContent side="top">{snapEnabled ? "Snap deaktivieren" : "Snap aktivieren"}</TooltipContent>
       </Tooltip>
 
-      {/* Snap-Größe */}
       {snapEnabled && (
         <Tooltip>
           <TooltipTrigger asChild>

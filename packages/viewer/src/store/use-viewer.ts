@@ -50,6 +50,11 @@ type ViewerState = {
   showGrid: boolean
   setShowGrid: (show: boolean) => void
 
+  snapEnabled: boolean
+  setSnapEnabled: (enabled: boolean) => void
+  snapSize: 0.25 | 0.5
+  setSnapSize: (size: 0.25 | 0.5) => void
+
   projectId: string | null
   setProjectId: (id: string | null) => void
   projectPreferences: Record<string, { showScans?: boolean, showGuides?: boolean, showGrid?: boolean }>
@@ -125,6 +130,11 @@ const useViewer = create<ViewerState>()(
           }
           return { showGrid: show, projectPreferences };
         }),
+
+      snapEnabled: true,
+      setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+      snapSize: 0.25,
+      setSnapSize: (size) => set({ snapSize: size }),
 
       projectId: null,
       setProjectId: (id) =>
