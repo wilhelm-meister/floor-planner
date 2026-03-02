@@ -76,6 +76,11 @@ type EditorState = {
   // Generic hole editing (works for slabs, ceilings, and any future polygon nodes)
   editingHole: { nodeId: string; holeIndex: number } | null
   setEditingHole: (hole: { nodeId: string; holeIndex: number } | null) => void
+  // Snap settings
+  snapEnabled: boolean
+  snapSize: 0.5 | 0.25
+  setSnapEnabled: (enabled: boolean) => void
+  setSnapSize: (size: 0.5 | 0.25) => void
 }
 
 const useEditor = create<EditorState>()((set, get) => ({
@@ -197,6 +202,10 @@ const useEditor = create<EditorState>()((set, get) => ({
   setSpaces: (spaces) => set({ spaces }),
   editingHole: null,
   setEditingHole: (hole) => set({ editingHole: hole }),
+  snapEnabled: true,
+  snapSize: 0.25,
+  setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+  setSnapSize: (size) => set({ snapSize: size }),
 }))
 
 export default useEditor

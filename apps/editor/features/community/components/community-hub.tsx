@@ -142,18 +142,18 @@ export default function CommunityHub() {
           </section>
         )}
 
-        {/* Sign-in CTA for unauthenticated users */}
+        {/* CTA — direkt in den Editor, kein Login nötig */}
         {!isAuthenticated && (
           <section className="rounded-2xl border border-border bg-neutral-50 dark:bg-neutral-900/50 px-8 py-12 text-center">
             <h2 className="text-2xl font-semibold mb-2">Build with Pascal</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Create and share 3D architectural projects. Sign in to get started.
+              Create and visualize 3D architectural projects — no account needed.
             </p>
             <button
-              onClick={() => setIsSignInDialogOpen(true)}
+              onClick={() => router.push('/editor/demo')}
               className="rounded-lg bg-primary px-6 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
             >
-              Sign in to create a project
+              Open Editor
             </button>
           </section>
         )}

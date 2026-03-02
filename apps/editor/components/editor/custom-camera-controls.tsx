@@ -83,7 +83,7 @@ export const CustomCameraControls = () => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
         keyState.space = true
-        document.body.style.cursor = 'grab'
+        document.body.classList.add('space-pan')
       }
       if (event.code === 'ShiftRight') {
         keyState.shiftRight = true
@@ -103,7 +103,7 @@ export const CustomCameraControls = () => {
     const onKeyUp = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
         keyState.space = false
-        document.body.style.cursor = ''
+        document.body.classList.remove('space-pan')
       }
       if (event.code === 'ShiftRight') {
         keyState.shiftRight = false

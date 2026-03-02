@@ -1,42 +1,24 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Editor from '@/components/editor'
 import { SceneLoader } from '@/components/ui/scene-loader'
-import { useAuth } from '@/features/community/lib/auth/hooks'
 import { useProjectStore } from '@/features/community/lib/projects/store'
 
 export default function EditorPage() {
   const params = useParams()
   const projectId = params.projectId as string
-  const { isAuthenticated, isLoading } = useAuth()
-  const setActiveProject = useProjectStore((state) => state.setActiveProject)
-  const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // Kein Auth/DB nötig — lokaler Modus, isLoading sofort auf false setzen
+    useProjectStore.setState({ isLoading: false, isSceneLoading: false })
     setMounted(true)
   }, [])
 
-  // Use layoutEffect to set active project BEFORE the editor renders and hooks run
-  useEffect(() => {
-    if (isLoading) return
-    if (!isAuthenticated) {
-      router.replace('/')
-      return
-    }
-    if (projectId) {
-      setActiveProject(projectId)
-    }
-  }, [projectId, isAuthenticated, isLoading, setActiveProject, router])
-
-  if (!mounted || isLoading) {
+  if (!mounted) {
     return <SceneLoader fullScreen />
-  }
-
-  if (!isAuthenticated) {
-    return null
   }
 
   return (

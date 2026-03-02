@@ -21,9 +21,19 @@ export async function saveAsset(file: File): Promise<string> {
 export async function loadAssetUrl(url: string): Promise<string | null> {
   if (!url) return null
 
-  // If it's already a blob or http URL, return as is
-  if (url.startsWith('blob:') || url.startsWith('http')) {
+  // HTTP URLs zurückgeben wie sie sind
+  if (url.startsWith('http')) {
     return url
+  }
+
+  // Blob-URLs validieren — nach einem Reload sind sie ungültig
+  if (url.startsWith('blob:')) {
+    try {
+      const res = await fetch(url, { method: 'HEAD' })
+      return res.ok ? url : null
+    } catch {
+      return null
+    }
   }
 
   // Handle our custom asset protocol

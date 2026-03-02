@@ -253,3 +253,14 @@
  0%,33%   {background-position: 0 0   ,50% 100%,100% 0}
  66%,100% {background-position: 0 100%,50% 0   ,100% 100%}
 }
+
+
+/* Space-Pan Cursor Override */
+body.space-pan,
+body.space-pan * {
+  cursor: grab !important;
+}
+body.space-pan:active,
+body.space-pan *:active {
+  cursor: grabbing !important;
+}

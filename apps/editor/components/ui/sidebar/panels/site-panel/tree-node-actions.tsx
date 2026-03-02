@@ -1,7 +1,7 @@
 import { type AnyNode, type AnyNodeId, emitter, useScene } from "@pascal-app/core";
 import { useViewer } from "@pascal-app/viewer";
 import { Camera, Eye, EyeOff, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Popover,
   PopoverContent,
@@ -46,6 +46,22 @@ export function TreeNodeActions({ node }: TreeNodeActionsProps) {
     setOpen(false);
   };
 
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { deleteNode } = useScene.getState();
+    if (selectedIds && selectedIds.includes(node.id)) {
+      for (const id of selectedIds) {
+        const n = useScene.getState().nodes[id as AnyNodeId];
+        deleteNode(id as AnyNodeId);
+        if (n?.parentId) useScene.getState().dirtyNodes.add(n.parentId as AnyNodeId);
+      }
+      useViewer.getState().setSelection({ selectedIds: [] });
+    } else {
+      deleteNode(node.id);
+      if (node.parentId) useScene.getState().dirtyNodes.add(node.parentId as AnyNodeId);
+    }
+  }, [node, selectedIds]);
+
   const handleClearCamera = (e: React.MouseEvent) => {
     e.stopPropagation();
     updateNode(node.id, { camera: undefined });
@@ -64,6 +80,14 @@ export function TreeNodeActions({ node }: TreeNodeActionsProps) {
         ) : (
           <EyeOff className="w-3 h-3 opacity-50" />
         )}
+      </button>
+
+      <button
+        className="w-6 h-6 flex items-center justify-center rounded-md cursor-pointer hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+        onClick={handleDelete}
+        title="Delete"
+      >
+        <Trash2 className="w-3 h-3" />
       </button>
 
       <Popover open={open} onOpenChange={setOpen}>

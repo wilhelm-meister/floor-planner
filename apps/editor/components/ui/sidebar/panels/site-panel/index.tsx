@@ -9,6 +9,7 @@ import {
   type ZoneNode,
   type ScanNode,
   type GuideNode,
+  GuideNode as GuideNodeSchema,
 } from "@pascal-app/core";
 import { useViewer } from "@pascal-app/viewer";
 import {
@@ -394,9 +395,22 @@ function LevelReferences({ levelId, isLastLevel }: { levelId: string, isLastLeve
     e.target.value = '';
 
     const projectId = activeProject?.id;
+
+    // Lokaler Modus: kein Projekt nötig — Bild via IndexedDB (asset:// protocol)
     if (!projectId) {
-      useUploadStore.getState().startUpload(levelId, 'scan', file.name);
-      useUploadStore.getState().setError(levelId, 'No active project. Please open a project first.');
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        useUploadStore.getState().startUpload(levelId, 'scan', file.name);
+        useUploadStore.getState().setError(levelId, 'Local mode only supports image files (floor plans).');
+        return;
+      }
+      import('@pascal-app/core').then(({ saveAsset }) => {
+        saveAsset(file).then((assetUrl) => {
+          const node = GuideNodeSchema.parse({ url: assetUrl, name: file.name, parentId: levelId });
+          useScene.getState().createNode(node, levelId as any);
+          useEditor.getState().setSelectedReferenceId(node.id);
+        });
+      });
       return;
     }
 

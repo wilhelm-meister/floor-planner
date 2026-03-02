@@ -30,6 +30,16 @@ import { ThumbnailGenerator } from './thumbnail-generator'
 
 // Load default scene initially (will be replaced when project loads)
 useScene.getState().loadScene()
+
+// Cleanup: GuideNodes mit blob:-URLs entfernen (ungültig nach Reload)
+{
+  const nodes = useScene.getState().nodes as Record<string, any>
+  for (const node of Object.values(nodes)) {
+    if (node.type === 'guide' && typeof node.url === 'string' && node.url.startsWith('blob:')) {
+      useScene.getState().deleteNode(node.id)
+    }
+  }
+}
 initSpatialGridSync()
 initSpaceDetectionSync(useScene, useEditor)
 

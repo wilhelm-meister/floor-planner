@@ -1,8 +1,10 @@
 import { emitter, type GridEvent, useScene, WallNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
-import { useEffect, useRef } from 'react'
+import { Html } from '@react-three/drei'
+import { useEffect, useRef, useState } from 'react'
 import { DoubleSide, type Mesh, type Group, Shape, ShapeGeometry, Vector3 } from 'three'
 import { sfxEmitter } from '@/lib/sfx-bus'
+import useEditor from '@/store/use-editor'
 import { CursorSphere } from '../shared/cursor-sphere'
 
 const WALL_HEIGHT = 2.5
@@ -29,9 +31,12 @@ const snapTo45Degrees = (start: Vector3, cursor: Vector3): Vector3 => {
   let snappedX = start.x + Math.cos(snappedAngle) * distance
   let snappedZ = start.z + Math.sin(snappedAngle) * distance
 
-  // Snap to 0.5 grid
-  snappedX = Math.round(snappedX * 2) / 2
-  snappedZ = Math.round(snappedZ * 2) / 2
+  // Snap to grid (size from store)
+  const size = useEditor.getState().snapSize
+  if (useEditor.getState().snapEnabled) {
+    snappedX = Math.round(snappedX / size) * size
+    snappedZ = Math.round(snappedZ / size) * size
+  }
 
   return new Vector3(snappedX, cursor.y, snappedZ)
 }
@@ -103,6 +108,8 @@ export const WallTool: React.FC = () => {
   const endingPoint = useRef(new Vector3(0, 0, 0))
   const buildingState = useRef(0)
   const shiftPressed = useRef(false)
+  const labelRef = useRef<Group>(null)
+  const [wallLength, setWallLength] = useState<number | null>(null)
 
   useEffect(() => {
     let gridPosition: [number, number] = [0, 0]
@@ -111,12 +118,15 @@ export const WallTool: React.FC = () => {
     const onGridMove = (event: GridEvent) => {
       if (!cursorRef.current || !wallPreviewRef.current) return
 
-      gridPosition = [Math.round(event.position[0] * 2) / 2, Math.round(event.position[2] * 2) / 2]
+      const { snapEnabled: se, snapSize: ss } = useEditor.getState()
+      const snap = (v: number) => se ? Math.round(v / ss) * ss : v
+      gridPosition = [snap(event.position[0]), snap(event.position[2])]
       const cursorPosition = new Vector3(gridPosition[0], event.position[1], gridPosition[1])
 
       if (buildingState.current === 1) {
         // Snap to 45° angles only if shift is not pressed
-        const snapped = shiftPressed.current
+        const { snapEnabled: se } = useEditor.getState()
+        const snapped = (!se || shiftPressed.current)
           ? cursorPosition
           : snapTo45Degrees(startingPoint.current, cursorPosition)
         endingPoint.current.copy(snapped)
@@ -134,7 +144,21 @@ export const WallTool: React.FC = () => {
 
         // Update wall preview geometry
         updateWallPreview(wallPreviewRef.current, startingPoint.current, endingPoint.current)
+
+        // Update length label
+        const dx = endingPoint.current.x - startingPoint.current.x
+        const dz = endingPoint.current.z - startingPoint.current.z
+        const len = Math.sqrt(dx * dx + dz * dz)
+        setWallLength(Math.round(len * 100) / 100)
+        if (labelRef.current) {
+          labelRef.current.position.set(
+            (startingPoint.current.x + endingPoint.current.x) / 2,
+            endingPoint.current.y + 0.5,
+            (startingPoint.current.z + endingPoint.current.z) / 2,
+          )
+        }
       } else {
+        setWallLength(null)
         // Not drawing a wall, just follow the grid position
         cursorRef.current.position.set(gridPosition[0], event.position[1], gridPosition[1])
       }
@@ -174,6 +198,7 @@ export const WallTool: React.FC = () => {
       if (buildingState.current === 1) {
         buildingState.current = 0
         wallPreviewRef.current.visible = false
+        setWallLength(null)
       }
     }
 
@@ -196,6 +221,17 @@ export const WallTool: React.FC = () => {
     <group>
       {/* Cursor indicator */}
       <CursorSphere ref={cursorRef}  />
+
+      {/* Längen-Label */}
+      {wallLength !== null && (
+        <group ref={labelRef}>
+          <Html center zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
+            <div className="rounded-md bg-background/90 border border-border px-2 py-0.5 text-xs font-mono font-medium text-foreground shadow-md backdrop-blur-sm whitespace-nowrap">
+              {wallLength.toFixed(2)} m
+            </div>
+          </Html>
+        </group>
+      )}
 
       {/* Wall preview */}
       <mesh ref={wallPreviewRef} visible={false} renderOrder={1}>

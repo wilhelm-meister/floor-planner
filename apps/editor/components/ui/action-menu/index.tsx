@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { CameraActions } from "./camera-actions";
 import { ControlModes } from "./control-modes";
 import { StructureTools } from "./structure-tools";
+import { SnapToggle } from "./snap-toggle";
 import useEditor from "@/store/use-editor";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
@@ -150,6 +151,8 @@ export function ActionMenu({ className }: { className?: string }) {
           <ViewToggles />
           <div className="mx-1 h-5 w-px bg-border" />
           <CameraActions />
+          <div className="mx-1 h-5 w-px bg-border" />
+          <SnapToggle />
         </div>
       </motion.div>
     </TooltipProvider>
