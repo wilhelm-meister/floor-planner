@@ -91,8 +91,8 @@ const useEditor = create<EditorState>()((set, get) => ({
 
     set({ phase })
 
-    // Reset to select mode and clear tool/catalog when switching phases
-    set({ mode: 'select', tool: null, catalogCategory: null })
+    // Switch to build mode directly when changing phase — select only on explicit user action
+    set({ mode: 'build', tool: null, catalogCategory: null })
 
     const viewer = useViewer.getState()
     const scene = useScene.getState()
@@ -137,14 +137,17 @@ const useEditor = create<EditorState>()((set, get) => ({
         viewer.resetSelection()
         break
 
-      case 'structure':
+      case 'structure': {
         selectBuildingAndLevel0()
+        const layer = get().structureLayer
+        if (layer === 'zones') set({ tool: 'zone' })
+        else set({ tool: 'wall' })
         break
+      }
 
       case 'furnish':
         selectBuildingAndLevel0()
-        // Furnish mode only supports elements layer, not zones
-        set({ structureLayer: 'elements' })
+        set({ structureLayer: 'elements', tool: 'item', catalogCategory: 'furniture' })
         break
     }
   },
@@ -182,7 +185,7 @@ const useEditor = create<EditorState>()((set, get) => ({
   setTool: (tool) => set({ tool }),
   structureLayer: 'elements',
   setStructureLayer: (layer) => {
-    set({ structureLayer: layer, mode: 'select', tool: null })
+    set({ structureLayer: layer, mode: 'build', tool: null })
 
     const viewer = useViewer.getState()
     viewer.setSelection({
