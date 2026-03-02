@@ -34,9 +34,9 @@ const DEFAULT_DIMENSIONS: [number, number, number] = [1, 1, 1]
 
 // Snap helpers that respect the global snap toggle
 const sg = (pos: number, dim: number): number =>
-  useEditor.getState().snapEnabled ? sg(pos, dim) : pos
+  useEditor.getState().snapEnabled ? snapToGrid(pos, dim) : pos
 const sh = (v: number): number =>
-  useEditor.getState().snapEnabled ? sh(v) : v
+  useEditor.getState().snapEnabled ? snapToHalf(v) : v
 
 // ============================================================================
 // FLOOR STRATEGY
