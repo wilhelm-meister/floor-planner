@@ -1,8 +1,9 @@
 'use client'
 
 import { emitter, type GridEvent, type AnyNodeId, type WallNode, useScene } from '@pascal-app/core'
-import { Html, Line } from '@react-three/drei'
-import { useEffect, useRef, useState } from 'react'
+import { Html } from '@react-three/drei'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import * as THREE from 'three'
 import useEditor from '@/store/use-editor'
 
 type HandleTarget = 'start' | 'end' | null
@@ -109,8 +110,23 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const midZ = (startPos[1] + endPos[1]) / 2
 
   const isDragging = dragTarget !== null
-  const lineColor = isDragging ? '#facc15' : '#fbbf24'  // brighter yellow while dragging
-  const lineWidth = isDragging ? 4 : 3
+
+  // Build a thin flat box along the wall as a highlight (avoids LineMaterial / post-processing incompatibility)
+  const wallHighlight = useMemo(() => {
+    const dx = endPos[0] - startPos[0]
+    const dz = endPos[1] - startPos[1]
+    const length = Math.sqrt(dx * dx + dz * dz)
+    if (length < 0.01) return null
+
+    const angle = Math.atan2(dz, dx)
+    const cx = (startPos[0] + endPos[0]) / 2
+    const cz = (startPos[1] + endPos[1]) / 2
+
+    return { length, angle, cx, cz }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startPos[0], startPos[1], endPos[0], endPos[1]])
+
+  const highlightColor = isDragging ? '#facc15' : '#fbbf24'
 
   const getHandleColor = (target: 'start' | 'end') => {
     if (dragTarget === target) return '#facc15'
@@ -120,17 +136,21 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
 
   return (
     <group>
-      {/* Glowing yellow line along the full wall */}
-      <Line
-        points={[
-          [startPos[0], LINE_Y, startPos[1]],
-          [endPos[0], LINE_Y, endPos[1]],
-        ]}
-        color={lineColor}
-        lineWidth={lineWidth}
-        transparent
-        opacity={0.92}
-      />
+      {/* Glowing yellow highlight along the full wall — thin flat box, post-processing compatible */}
+      {wallHighlight && (
+        <mesh
+          position={[wallHighlight.cx, LINE_Y, wallHighlight.cz]}
+          rotation={[0, -wallHighlight.angle, 0]}
+        >
+          <boxGeometry args={[wallHighlight.length, 0.012, 0.04]} />
+          <meshBasicMaterial
+            color={highlightColor}
+            transparent
+            opacity={isDragging ? 1 : 0.85}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
 
       {/* Start handle */}
       <mesh
