@@ -11,6 +11,7 @@ import type {
 } from '@pascal-app/core'
 import { getScaledDimensions, sceneRegistry, useScene } from '@pascal-app/core'
 import { Vector3 } from 'three'
+import useEditor from '@/store/use-editor'
 import type {
   CommitResult,
   LevelResolver,
@@ -31,6 +32,12 @@ import {
 
 const DEFAULT_DIMENSIONS: [number, number, number] = [1, 1, 1]
 
+// Snap helpers that respect the global snap toggle
+const sg = (pos: number, dim: number): number =>
+  useEditor.getState().snapEnabled ? sg(pos, dim) : pos
+const sh = (v: number): number =>
+  useEditor.getState().snapEnabled ? sh(v) : v
+
 // ============================================================================
 // FLOOR STRATEGY
 // ============================================================================
@@ -45,8 +52,8 @@ export const floorStrategy = {
 
     const dims = ctx.draftItem ? getScaledDimensions(ctx.draftItem) : (ctx.asset.dimensions ?? DEFAULT_DIMENSIONS)
     const [dimX, , dimZ] = dims
-    const x = snapToGrid(event.position[0], dimX)
-    const z = snapToGrid(event.position[2], dimZ)
+    const x = sg(event.position[0], dimX)
+    const z = sg(event.position[2], dimZ)
 
     return {
       gridPosition: [x, 0, z],
@@ -118,9 +125,9 @@ export const wallStrategy = {
     const itemRotation = calculateItemRotation(event.normal)
     const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-    const x = snapToHalf(event.localPosition[0])
-    const y = snapToHalf(event.localPosition[1])
-    const z = snapToHalf(event.localPosition[2])
+    const x = sh(event.localPosition[0])
+    const y = sh(event.localPosition[1])
+    const z = sh(event.localPosition[2])
 
     // Get auto-adjusted Y position from validator
     const validation = validators.canPlaceOnWall(
@@ -147,9 +154,9 @@ export const wallStrategy = {
       cursorRotationY: cursorRotation,
       gridPosition: [x, adjustedY, z],
       cursorPosition: [
-        snapToHalf(event.position[0]),
-        snapToHalf(event.position[1]),
-        snapToHalf(event.position[2]),
+        sh(event.position[0]),
+        sh(event.position[1]),
+        sh(event.position[2]),
       ],
       stopPropagation: true,
     }
@@ -169,9 +176,9 @@ export const wallStrategy = {
     const itemRotation = calculateItemRotation(event.normal)
     const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-    const snappedX = snapToHalf(event.localPosition[0])
-    const snappedY = snapToHalf(event.localPosition[1])
-    const snappedZ = snapToHalf(event.localPosition[2])
+    const snappedX = sh(event.localPosition[0])
+    const snappedY = sh(event.localPosition[1])
+    const snappedZ = sh(event.localPosition[2])
 
     // Get auto-adjusted Y position from validator
     const validation = validators.canPlaceOnWall(
@@ -190,9 +197,9 @@ export const wallStrategy = {
     return {
       gridPosition: [snappedX, adjustedY, snappedZ],
       cursorPosition: [
-        snapToHalf(event.position[0]),
-        snapToHalf(event.position[1]),
-        snapToHalf(event.position[2]),
+        sh(event.position[0]),
+        sh(event.position[1]),
+        sh(event.position[2]),
       ],
       cursorRotationY: cursorRotation,
       nodeUpdate: {
@@ -285,8 +292,8 @@ export const ceilingStrategy = {
     const [dimX, , dimZ] = dims
     const itemHeight = dims[1]
 
-    const x = snapToGrid(event.position[0], dimX)
-    const z = snapToGrid(event.position[2], dimZ)
+    const x = sg(event.position[0], dimX)
+    const z = sg(event.position[2], dimZ)
 
     return {
       stateUpdate: { surface: 'ceiling', ceilingId: event.node.id },
@@ -312,8 +319,8 @@ export const ceilingStrategy = {
     const [dimX, , dimZ] = dims
     const itemHeight = dims[1]
 
-    const x = snapToGrid(event.position[0], dimX)
-    const z = snapToGrid(event.position[2], dimZ)
+    const x = sg(event.position[0], dimX)
+    const z = sg(event.position[2], dimZ)
 
     return {
       gridPosition: [x, -itemHeight, z],
@@ -409,8 +416,8 @@ export const itemSurfaceStrategy = {
     const worldPos = new Vector3(event.position[0], event.position[1], event.position[2])
     const localPos = surfaceMesh.worldToLocal(worldPos)
 
-    const x = snapToGrid(localPos.x, ourDims[0])
-    const z = snapToGrid(localPos.z, ourDims[2])
+    const x = sg(localPos.x, ourDims[0])
+    const z = sg(localPos.z, ourDims[2])
     const y = surfaceItem.asset.surface.height * surfaceItem.scale[1]
 
     const worldSnapped = surfaceMesh.localToWorld(new Vector3(x, y, z))
@@ -443,8 +450,8 @@ export const itemSurfaceStrategy = {
     const worldPos = new Vector3(event.position[0], event.position[1], event.position[2])
     const localPos = surfaceMesh.worldToLocal(worldPos)
 
-    const x = snapToGrid(localPos.x, ourDims[0])
-    const z = snapToGrid(localPos.z, ourDims[2])
+    const x = sg(localPos.x, ourDims[0])
+    const z = sg(localPos.z, ourDims[2])
     const y = surfaceItem.asset.surface.height * surfaceItem.scale[1]
 
     const worldSnapped = surfaceMesh.localToWorld(new Vector3(x, y, z))
