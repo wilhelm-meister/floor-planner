@@ -71,11 +71,29 @@ export function WallPanel() {
         />
       </PanelSection>
 
-      <PanelSection title="Info">
-        <div className="flex items-center justify-between px-2 py-1 text-sm text-muted-foreground">
-          <span>Length</span>
-          <span className="font-mono text-white">{length.toFixed(2)} m</span>
-        </div>
+      <PanelSection title="Dimensions (continued)">
+        <SliderControl
+          label="Length"
+          value={Math.round(length * 100) / 100}
+          onChange={(newLength) => {
+            const dx = node.end[0] - node.start[0]
+            const dz = node.end[1] - node.start[1]
+            const currentLen = Math.sqrt(dx * dx + dz * dz)
+            if (currentLen < 0.001) return
+            const unitX = dx / currentLen
+            const unitZ = dz / currentLen
+            const newEnd: [number, number] = [
+              node.start[0] + unitX * newLength,
+              node.start[1] + unitZ * newLength,
+            ]
+            handleUpdate({ end: newEnd })
+          }}
+          min={0.1}
+          max={50}
+          precision={2}
+          step={0.1}
+          unit="m"
+        />
       </PanelSection>
     </PanelWrapper>
   )

@@ -1,4 +1,4 @@
-import { type AnyNodeId, type CeilingNode, type SlabNode, useScene } from '@pascal-app/core'
+import { type AnyNodeId, type CeilingNode, type SlabNode, type WallNode, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import useEditor, { type Phase, type Tool } from '@/store/use-editor'
 import { CeilingBoundaryEditor } from './ceiling/ceiling-boundary-editor'
@@ -12,6 +12,7 @@ import { SiteBoundaryEditor } from './site/site-boundary-editor'
 import { SlabBoundaryEditor } from './slab/slab-boundary-editor'
 import { SlabHoleEditor } from './slab/slab-hole-editor'
 import { SlabTool } from './slab/slab-tool'
+import { WallEdgeHandles } from './wall/wall-edge-handles'
 import { WallTool } from './wall/wall-tool'
 import { WindowTool } from './window/window-tool'
 import { ZoneBoundaryEditor } from './zone/zone-boundary-editor'
@@ -56,6 +57,11 @@ export const ToolManager: React.FC = () => {
     | CeilingNode['id']
     | undefined
 
+  // Check if a single wall is selected
+  const selectedWallId = selectedIds.length === 1
+    ? (selectedIds.find((id) => nodes[id as AnyNodeId]?.type === 'wall') as WallNode['id'] | undefined)
+    : undefined
+
   // Show site boundary editor when in site phase and edit mode
   const showSiteBoundaryEditor = phase === 'site' && mode === 'edit'
 
@@ -86,6 +92,10 @@ export const ToolManager: React.FC = () => {
     !showSlabBoundaryEditor &&
     !showCeilingBoundaryEditor
 
+  // Show wall edge handles when a single wall is selected in select mode
+  const showWallEdgeHandles =
+    phase === 'structure' && mode === 'select' && selectedWallId !== undefined
+
   // Show build tools when in build mode
   const showBuildTool = mode === 'build' && tool !== null
 
@@ -105,6 +115,7 @@ export const ToolManager: React.FC = () => {
       {showCeilingHoleEditor && selectedCeilingId && editingHole && (
         <CeilingHoleEditor ceilingId={selectedCeilingId} holeIndex={editingHole.holeIndex} />
       )}
+      {showWallEdgeHandles && selectedWallId && <WallEdgeHandles wallId={selectedWallId} />}
       {movingNode && <MoveTool />}
       {!movingNode && BuildToolComponent && <BuildToolComponent />}
     </>
