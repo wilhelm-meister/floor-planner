@@ -79,8 +79,10 @@ type EditorState = {
   // Snap settings
   snapEnabled: boolean
   snapSize: 0.5 | 0.25
+  snapShiftOverride: boolean   // true while Shift is held during placement
   setSnapEnabled: (enabled: boolean) => void
   setSnapSize: (size: 0.5 | 0.25) => void
+  setSnapShiftOverride: (v: boolean) => void
 }
 
 const useEditor = create<EditorState>()((set, get) => ({
@@ -207,8 +209,10 @@ const useEditor = create<EditorState>()((set, get) => ({
   setEditingHole: (hole) => set({ editingHole: hole }),
   snapEnabled: true,
   snapSize: 0.25,
+  snapShiftOverride: false,
   setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
   setSnapSize: (size) => set({ snapSize: size }),
+  setSnapShiftOverride: (v) => set({ snapShiftOverride: v }),
 }))
 
 export default useEditor

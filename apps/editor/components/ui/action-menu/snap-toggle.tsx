@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 export function SnapToggle() {
   const snapEnabled = useEditor((s) => s.snapEnabled);
   const snapSize = useEditor((s) => s.snapSize);
+  const snapShiftOverride = useEditor((s) => s.snapShiftOverride);
+
+  // Visually "off" when Shift is held (temporary override during placement)
+  const effectivelyOn = snapEnabled && !snapShiftOverride;
 
   // Write to both stores: useEditor (wall-tool, wall-edge-handles) + useViewer (applySnap in wall-renderer)
   const setSnapEnabled = (enabled: boolean) => {
@@ -28,18 +32,20 @@ export function SnapToggle() {
             onClick={() => setSnapEnabled(!snapEnabled)}
             className={cn(
               "flex h-8 items-center gap-1 rounded-lg px-2 text-sm font-medium transition-colors",
-              snapEnabled
+              effectivelyOn
                 ? "bg-accent text-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
-            <Magnet className={cn("h-3.5 w-3.5", !snapEnabled && "opacity-40")} />
+            <Magnet className={cn("h-3.5 w-3.5", !effectivelyOn && "opacity-40")} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top">{snapEnabled ? "Snap deaktivieren" : "Snap aktivieren"}</TooltipContent>
+        <TooltipContent side="top">
+          {snapShiftOverride ? "Snap pausiert (Shift)" : snapEnabled ? "Snap deaktivieren" : "Snap aktivieren"}
+        </TooltipContent>
       </Tooltip>
 
-      {snapEnabled && (
+      {effectivelyOn && (
         <Tooltip>
           <TooltipTrigger asChild>
             <button

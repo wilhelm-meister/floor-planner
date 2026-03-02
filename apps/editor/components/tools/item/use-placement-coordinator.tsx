@@ -31,6 +31,7 @@ import {
 import { distance, smoothstep, uv, vec2 } from 'three/tsl'
 import { LineBasicNodeMaterial, MeshBasicNodeMaterial } from 'three/webgpu'
 import { sfxEmitter } from '@/lib/sfx-bus'
+import useEditor from '@/store/use-editor'
 import { ceilingStrategy, checkCanPlace, floorStrategy, itemSurfaceStrategy, snapOverrideRef, wallStrategy } from './placement-strategies'
 import type { PlacementState, TransitionResult } from './placement-types'
 import type { DraftNodeHandle } from './use-draft-node'
@@ -595,6 +596,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
       if (event.key === 'Shift') {
         shiftFreeRef.current = true
         snapOverrideRef.shiftFree = true
+        useEditor.getState().setSnapShiftOverride(true)
         revalidate()
         return
       }
@@ -625,6 +627,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
       if (event.key === 'Shift') {
         shiftFreeRef.current = false
         snapOverrideRef.shiftFree = false
+        useEditor.getState().setSnapShiftOverride(false)
         revalidate()
       }
     }
