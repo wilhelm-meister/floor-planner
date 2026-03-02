@@ -14,17 +14,19 @@ export const useKeyboard = () => {
 
       if (e.key === 'Escape') {
         e.preventDefault()
+
+        // Cancel any active tool action (wall preview, item draft, etc.)
         emitter.emit('tool:cancel')
 
-        // Clear selections to close UI panels, but KEEP the active building and level context
+        // Clear selections + panel state
         useViewer.getState().setSelection({ selectedIds: [], zoneId: null })
         useEditor.getState().setSelectedReferenceId(null)
 
-        // If in build mode, switch back to select mode
-        const { mode } = useEditor.getState()
-        if (mode === 'build') {
-          useEditor.getState().setMode('select')
-        }
+        // Always reset shift-snap override (in case Shift was held)
+        useEditor.getState().setSnapShiftOverride(false)
+
+        // Always land in select mode — regardless of current mode
+        useEditor.getState().setMode('select')
       } else if (e.key === '1' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
         useEditor.getState().setPhase('site')
