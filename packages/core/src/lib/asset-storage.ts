@@ -8,8 +8,19 @@ const urlCache = new Map<string, string>()
 /**
  * Save a file to IndexedDB and return a custom protocol URL
  */
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // Fallback für nicht-sichere Kontexte (HTTP über IP)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+  })
+}
+
 export async function saveAsset(file: File): Promise<string> {
-  const id = crypto.randomUUID()
+  const id = generateId()
   await set(`${ASSET_PREFIX}${id}`, file)
   return `asset://${id}`
 }

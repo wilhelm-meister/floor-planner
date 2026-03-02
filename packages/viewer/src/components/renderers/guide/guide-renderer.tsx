@@ -1,9 +1,6 @@
 import { type GuideNode, useRegistry } from '@pascal-app/core'
-import { useLoader } from '@react-three/fiber'
-import { Suspense, useMemo, useRef } from 'react'
-import { DoubleSide, type Group, type Texture, TextureLoader } from 'three'
-import { float, texture } from 'three/tsl'
-import { MeshBasicNodeMaterial } from 'three/webgpu'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { DoubleSide, MeshBasicMaterial, type Group, type Texture, TextureLoader } from 'three'
 import { useAssetUrl } from '../../../hooks/use-asset-url'
 import useViewer from '../../../store/use-viewer'
 
@@ -13,52 +10,53 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
   useRegistry(node.id, 'guide', ref)
 
   const resolvedUrl = useAssetUrl(node.url)
+  const [tex, setTex] = useState<Texture | null>(null)
+  const [aspect, setAspect] = useState(1)
 
-  return (
-    <group ref={ref} visible={showGuides} position={node.position} rotation={[0, node.rotation[1], 0]}>
-      {resolvedUrl && (
-        <Suspense>
-          <GuidePlane url={resolvedUrl} scale={node.scale} opacity={node.opacity} />
-        </Suspense>
-      )}
-    </group>
-  )
-}
+  useEffect(() => {
+    if (!resolvedUrl) return
+    let cancelled = false
+    const img = new Image()
+    img.onload = () => {
+      if (cancelled) return
+      const loader = new TextureLoader()
+      loader.load(resolvedUrl, (t) => {
+        if (cancelled) return
+        setAspect(img.naturalWidth / img.naturalHeight || 1)
+        setTex(t)
+      })
+    }
+    img.src = resolvedUrl
+    return () => { cancelled = true }
+  }, [resolvedUrl])
 
-const GuidePlane = ({ url, scale, opacity }: { url: string; scale: number; opacity: number }) => {
-  const tex = useLoader(TextureLoader, url) as Texture
+  const planeW = 10 * node.scale
+  const planeH = planeW / aspect
 
-  const { width, height, material } = useMemo(() => {
-    const img = tex.image as HTMLImageElement | ImageBitmap
-    const w = img.width || 1
-    const h = img.height || 1
-    const aspect = w / h
-
-    // Default: 10 meters wide, height from aspect ratio
-    const planeWidth = 10 * scale
-    const planeHeight = (10 / aspect) * scale
-
-    const normalizedOpacity = opacity / 100
-
-    const mat = new MeshBasicNodeMaterial({
+  const material = useMemo(() => {
+    if (!tex) return null
+    return new MeshBasicMaterial({
+      map: tex,
       transparent: true,
-      colorNode: texture(tex),
-      opacityNode: float(normalizedOpacity),
+      opacity: node.opacity / 100,
       side: DoubleSide,
+      depthTest: false,
       depthWrite: false,
     })
-
-    return { width: planeWidth, height: planeHeight, material: mat }
-  }, [tex, scale, opacity])
+  }, [tex, node.opacity])
 
   return (
-    <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      material={material}
-      raycast={() => {}}
-      frustumCulled={false}
-    >
-      <planeGeometry args={[width, height]} boundingBox={null} boundingSphere={null} />
-    </mesh>
+    <group ref={ref} visible={showGuides}>
+      {material && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0.02, 0]}
+          material={material}
+          frustumCulled={false}
+        >
+          <planeGeometry args={[planeW, planeH]} />
+        </mesh>
+      )}
+    </group>
   )
 }

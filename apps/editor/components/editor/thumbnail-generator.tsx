@@ -81,7 +81,10 @@ export const ThumbnailGenerator = ({ projectId: propProjectId }: ThumbnailGenera
           if (result.success) {
             useProjectStore.getState().updateActiveThumbnail(result.data.thumbnail_url)
           } else {
-            console.error('❌ Failed to upload thumbnail:', result.error)
+            // Lokaler Modus ohne Auth — kein Upload nötig, kein Error
+            if (result.error !== 'Not authenticated') {
+              console.error('❌ Failed to upload thumbnail:', result.error)
+            }
           }
         } else {
           console.error('❌ Failed to create blob from canvas')
