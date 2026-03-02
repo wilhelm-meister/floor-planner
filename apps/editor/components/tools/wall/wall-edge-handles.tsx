@@ -2,29 +2,34 @@
 
 import { emitter, type GridEvent, type AnyNodeId, type WallNode, useScene } from '@pascal-app/core'
 import { Html } from '@react-three/drei'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import * as THREE from 'three'
+import { useEffect, useRef, useState } from 'react'
+import { DoubleSide, Shape, ShapeGeometry, Vector3 } from 'three'
 import useEditor from '@/store/use-editor'
 
 type HandleTarget = 'start' | 'end' | null
 
 const HANDLE_Y = 0.05
 const HANDLE_RADIUS = 0.12
-const LINE_Y = 0.05
+const LINE_Y = 0.02
+const WALL_HEIGHT = 2.5
 
 interface WallEdgeHandlesProps {
   wallId: string
 }
 
 /**
- * Wall edge handles — shows a glowing yellow line along the selected wall.
- * Dragging an endpoint updates the wall in real-time.
+ * Wall edge handles:
+ * - Yellow box highlight along selected wall
+ * - Draggable endpoint spheres
+ * - Preview mesh during drag (no expensive geometry rebuild on every move)
+ * - Commits updateNode only on pointerUp
  */
 export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const node = useScene((s) => s.nodes[wallId as AnyNodeId] as WallNode | undefined)
 
   const [dragTarget, setDragTarget] = useState<HandleTarget>(null)
   const [hoveredHandle, setHoveredHandle] = useState<HandleTarget>(null)
+  // Live drag positions (only for visual preview — no store writes during drag)
   const [liveStart, setLiveStart] = useState<[number, number] | null>(null)
   const [liveEnd, setLiveEnd] = useState<[number, number] | null>(null)
   const [wallLength, setWallLength] = useState<number | null>(null)
@@ -32,8 +37,10 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const dragTargetRef = useRef<HandleTarget>(null)
   const nodeRef = useRef(node)
   nodeRef.current = node
+  const liveStartRef = useRef<[number, number] | null>(null)
+  const liveEndRef = useRef<[number, number] | null>(null)
 
-  // Real-time drag: update wall geometry live on every grid:move
+  // Track drag position via grid:move — only update React state (no store writes)
   useEffect(() => {
     const onGridMove = (event: GridEvent) => {
       if (!dragTargetRef.current || !nodeRef.current) return
@@ -43,41 +50,45 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       const pos: [number, number] = [snap(event.position[0]), snap(event.position[2])]
       const n = nodeRef.current
 
-      let newStart = n.start
-      let newEnd = n.end
-
       if (dragTargetRef.current === 'end') {
-        newEnd = pos
+        liveEndRef.current = pos
         setLiveEnd(pos)
         const dx = pos[0] - n.start[0]
         const dz = pos[1] - n.start[1]
         setWallLength(Math.round(Math.sqrt(dx * dx + dz * dz) * 100) / 100)
       } else {
-        newStart = pos
+        liveStartRef.current = pos
         setLiveStart(pos)
         const dx = n.end[0] - pos[0]
         const dz = n.end[1] - pos[1]
         setWallLength(Math.round(Math.sqrt(dx * dx + dz * dz) * 100) / 100)
       }
-
-      // Update wall in real-time so the 3D geometry rebuilds immediately
-      const scene = useScene.getState()
-      scene.updateNode(wallId as AnyNodeId, {
-        start: newStart,
-        end: newEnd,
-      })
-      scene.dirtyNodes.add(wallId as AnyNodeId)
     }
 
     emitter.on('grid:move', onGridMove)
     return () => emitter.off('grid:move', onGridMove)
-  }, [wallId])
+  }, [])
 
-  // Commit on pointer up (geometry already up to date, just clean up state)
+  // Commit to store on pointerUp (single geometry rebuild)
   useEffect(() => {
     if (!dragTarget) return
 
     const onPointerUp = () => {
+      const n = nodeRef.current
+      if (n) {
+        const updates: Partial<WallNode> = {}
+        if (dragTargetRef.current === 'end' && liveEndRef.current) {
+          updates.end = liveEndRef.current
+        } else if (dragTargetRef.current === 'start' && liveStartRef.current) {
+          updates.start = liveStartRef.current
+        }
+        if (Object.keys(updates).length > 0) {
+          const scene = useScene.getState()
+          scene.updateNode(wallId as AnyNodeId, updates)
+          scene.dirtyNodes.add(wallId as AnyNodeId)
+        }
+      }
+
       useScene.temporal.getState().resume()
 
       // Suppress follow-up click so we don't accidentally deselect
@@ -90,6 +101,8 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       requestAnimationFrame(() => window.removeEventListener('click', suppressClick, true))
 
       dragTargetRef.current = null
+      liveStartRef.current = null
+      liveEndRef.current = null
       setDragTarget(null)
       setLiveStart(null)
       setLiveEnd(null)
@@ -98,34 +111,23 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
 
     window.addEventListener('pointerup', onPointerUp, true)
     return () => window.removeEventListener('pointerup', onPointerUp, true)
-  }, [dragTarget])
+  }, [dragTarget, wallId])
 
   if (!node) return null
 
-  // Use live positions during drag, otherwise use node positions
   const startPos = liveStart ?? node.start
   const endPos = liveEnd ?? node.end
 
-  const midX = (startPos[0] + endPos[0]) / 2
-  const midZ = (startPos[1] + endPos[1]) / 2
+  const dx = endPos[0] - startPos[0]
+  const dz = endPos[1] - startPos[1]
+  const length = Math.sqrt(dx * dx + dz * dz)
+  const angle = length > 0.01 ? Math.atan2(dz, dx) : 0
+  const cx = (startPos[0] + endPos[0]) / 2
+  const cz = (startPos[1] + endPos[1]) / 2
+  const midX = cx
+  const midZ = cz
 
   const isDragging = dragTarget !== null
-
-  // Build a thin flat box along the wall as a highlight (avoids LineMaterial / post-processing incompatibility)
-  const wallHighlight = useMemo(() => {
-    const dx = endPos[0] - startPos[0]
-    const dz = endPos[1] - startPos[1]
-    const length = Math.sqrt(dx * dx + dz * dz)
-    if (length < 0.01) return null
-
-    const angle = Math.atan2(dz, dx)
-    const cx = (startPos[0] + endPos[0]) / 2
-    const cz = (startPos[1] + endPos[1]) / 2
-
-    return { length, angle, cx, cz }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startPos[0], startPos[1], endPos[0], endPos[1]])
-
   const highlightColor = isDragging ? '#facc15' : '#fbbf24'
 
   const getHandleColor = (target: 'start' | 'end') => {
@@ -134,19 +136,51 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
     return '#fbbf24'
   }
 
+  // Build preview wall shape (like wall-tool preview) — only shown during drag
+  const buildPreviewShape = () => {
+    if (!isDragging || length < 0.01) return null
+    const shape = new Shape()
+    shape.moveTo(0, 0)
+    shape.lineTo(length, 0)
+    shape.lineTo(length, WALL_HEIGHT)
+    shape.lineTo(0, WALL_HEIGHT)
+    shape.closePath()
+    return new ShapeGeometry(shape)
+  }
+
+  const previewGeo = isDragging ? buildPreviewShape() : null
+
   return (
     <group>
-      {/* Glowing yellow highlight along the full wall — thin flat box, post-processing compatible */}
-      {wallHighlight && (
+      {/* Yellow highlight box along the wall */}
+      {length > 0.01 && (
         <mesh
-          position={[wallHighlight.cx, LINE_Y, wallHighlight.cz]}
-          rotation={[0, -wallHighlight.angle, 0]}
+          position={[cx, LINE_Y, cz]}
+          rotation={[0, -angle, 0]}
         >
-          <boxGeometry args={[wallHighlight.length, 0.012, 0.04]} />
+          <boxGeometry args={[length, 0.012, 0.04]} />
           <meshBasicMaterial
             color={highlightColor}
             transparent
             opacity={isDragging ? 1 : 0.85}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
+      {/* Preview wall mesh during drag (shows where the wall will land) */}
+      {isDragging && previewGeo && (
+        <mesh
+          geometry={previewGeo}
+          position={[startPos[0], 0, startPos[1]]}
+          rotation={[0, -angle, 0]}
+        >
+          <meshBasicMaterial
+            color="#818cf8"
+            transparent
+            opacity={0.35}
+            side={DoubleSide}
+            depthTest={false}
             depthWrite={false}
           />
         </mesh>
@@ -159,6 +193,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           if (e.button !== 0) return
           e.stopPropagation()
           dragTargetRef.current = 'start'
+          liveStartRef.current = null
           setDragTarget('start')
           setLiveStart(null)
           useScene.temporal.getState().pause()
@@ -184,6 +219,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           if (e.button !== 0) return
           e.stopPropagation()
           dragTargetRef.current = 'end'
+          liveEndRef.current = null
           setDragTarget('end')
           setLiveEnd(null)
           useScene.temporal.getState().pause()
