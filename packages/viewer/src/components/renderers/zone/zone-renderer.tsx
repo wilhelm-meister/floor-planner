@@ -132,10 +132,9 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
     return createWallGeometry(node.polygon)
   }, [node?.polygon])
 
-  // Calculate polygon centroid for label positioning using the geometric centroid formula
-  // This correctly handles polygons regardless of vertex distribution along edges
-  const centroid = useMemo(() => {
-    if (!node?.polygon || node.polygon.length < 3) return [0, 0] as [number, number]
+  // Calculate polygon centroid + area using the geometric centroid formula (shoelace)
+  const { centroid, areaSqm } = useMemo(() => {
+    if (!node?.polygon || node.polygon.length < 3) return { centroid: [0, 0] as [number, number], areaSqm: 0 }
 
     const polygon = node.polygon
     let signedArea = 0
@@ -146,7 +145,6 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
       const [x0, z0] = polygon[i]!
       const [x1, z1] = polygon[(i + 1) % polygon.length]!
 
-      // Cross product for signed area
       const cross = x0 * z1 - x1 * z0
       signedArea += cross
       cx += (x0 + x1) * cross
@@ -155,8 +153,12 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
 
     signedArea /= 2
     const factor = 1 / (6 * signedArea)
+    const area = Math.abs(signedArea)
 
-    return [cx * factor, cz * factor] as [number, number]
+    return {
+      centroid: [cx * factor, cz * factor] as [number, number],
+      areaSqm: Math.round(area * 100) / 100,
+    }
   }, [node?.polygon])
 
   // Create materials
@@ -187,10 +189,14 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
         <div style={{
           transform: 'translate3d(-50%, -50%, 0)',
           width: 'max-content',
+          textAlign: 'center',
           color: 'white',
           textShadow: `-1px -1px 0 ${node.color}, 1px -1px 0 ${node.color}, -1px 1px 0 ${node.color}, 1px 1px 0 ${node.color}`,
         }}>
-          <span>{node.name}</span>
+          <div style={{ fontWeight: 600, fontSize: '13px', lineHeight: 1.3 }}>{node.name}</div>
+          {areaSqm > 0 && (
+            <div style={{ fontSize: '11px', opacity: 0.9, lineHeight: 1.2 }}>{areaSqm} m²</div>
+          )}
         </div>
       </Html>
       {/* Floor fill */}
