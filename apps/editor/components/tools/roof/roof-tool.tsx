@@ -19,7 +19,6 @@ import useEditor from '@/store/use-editor'
 
 const DEFAULT_HEIGHT = 1.5
 const DEFAULT_WALL_HEIGHT = 2.5
-const BASE_HEIGHT = 0.5   // must match knee-wall height in roof-system
 const PADDING = 0   // roof-system already adds eaveOverhang + rakeOverhang on top
 const SNAP_DIST = 0.1
 
@@ -92,8 +91,8 @@ function getLevelFloorY(levelId: string): number {
 function placeRoof(levelId: string, bbox: ReturnType<typeof wallsBBox>): string {
   const { createNode, nodes } = useScene.getState()
   const floorY = getLevelFloorY(levelId)
-  // roof position Y so that knee-wall base aligns with top of walls
-  const roofY = floorY + bbox.wallHeight - BASE_HEIGHT
+  // roof position Y = top of walls (y=0 of geometry = wall top)
+  const roofY = floorY + bbox.wallHeight
   const slopeWidth = Math.max(bbox.width / 2, 0.5)
   const roofCount = Object.values(nodes).filter((n) => n.type === 'roof').length
   const roof = RoofNode.parse({
