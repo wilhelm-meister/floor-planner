@@ -119,7 +119,7 @@ export const WallTool: React.FC = () => {
       if (!cursorRef.current || !wallPreviewRef.current) return
 
       const { snapEnabled: se, snapSize: ss } = useEditor.getState()
-      const snap = (v: number) => se ? Math.round(v / ss) * ss : v
+      const snap = (v: number) => (se && !shiftPressed.current) ? Math.round(v / ss) * ss : v
       gridPosition = [snap(event.position[0]), snap(event.position[2])]
       const cursorPosition = new Vector3(gridPosition[0], event.position[1], gridPosition[1])
 
@@ -185,12 +185,14 @@ export const WallTool: React.FC = () => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = true
+        useEditor.getState().setSnapShiftOverride(true)
       }
     }
 
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = false
+        useEditor.getState().setSnapShiftOverride(false)
       }
     }
 
