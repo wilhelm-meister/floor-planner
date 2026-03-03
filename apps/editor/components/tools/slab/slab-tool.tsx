@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry, DoubleSide, type Line, type Group, Shape, Vector3 } from 'three'
 import { sfxEmitter } from '@/lib/sfx-bus'
 import { CursorSphere } from '../shared/cursor-sphere'
+import useEditor from '@/store/use-editor'
 
 const Y_OFFSET = 0.02
 
@@ -70,6 +71,9 @@ export const SlabTool: React.FC = () => {
   const currentLevelId = useViewer((state) => state.selection.levelId)
   const setSelection = useViewer((state) => state.setSelection)
 
+  const snapEnabled = useEditor((s) => s.snapEnabled)
+  const snapSize = useEditor((s) => s.snapSize)
+
   const [points, setPoints] = useState<Array<[number, number]>>([])
   const [cursorPosition, setCursorPosition] = useState<[number, number]>([0, 0])
   const [snappedCursorPosition, setSnappedCursorPosition] = useState<[number, number]>([0, 0])
@@ -84,8 +88,16 @@ export const SlabTool: React.FC = () => {
     const onGridMove = (event: GridEvent) => {
       if (!cursorRef.current) return
 
-      const gridX = Math.round(event.position[0] * 2) / 2
-      const gridZ = Math.round(event.position[2] * 2) / 2
+      let gridX: number
+      let gridZ: number
+      if (snapEnabled) {
+        const inv = 1 / snapSize
+        gridX = Math.round(event.position[0] * inv) / inv
+        gridZ = Math.round(event.position[2] * inv) / inv
+      } else {
+        gridX = event.position[0]
+        gridZ = event.position[2]
+      }
       const gridPosition: [number, number] = [gridX, gridZ]
 
       setCursorPosition(gridPosition)
