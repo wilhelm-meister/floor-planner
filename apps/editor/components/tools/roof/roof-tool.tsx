@@ -56,12 +56,14 @@ function findConnectedWalls(startId: string, allWalls: WallNode[]): WallNode[] {
 function wallsBBox(walls: WallNode[]) {
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
   let wallHeight = DEFAULT_WALL_HEIGHT
+  let wallThickness = 0.1
   for (const w of walls) {
     minX = Math.min(minX, w.start[0], w.end[0])
     maxX = Math.max(maxX, w.start[0], w.end[0])
     minZ = Math.min(minZ, w.start[1], w.end[1])
     maxZ = Math.max(maxZ, w.start[1], w.end[1])
     if (w.height) wallHeight = w.height
+    if (w.thickness) wallThickness = w.thickness
   }
   minX -= PADDING; maxX += PADDING
   minZ -= PADDING; maxZ += PADDING
@@ -71,6 +73,7 @@ function wallsBBox(walls: WallNode[]) {
     length: maxX - minX,
     width: maxZ - minZ,
     wallHeight,
+    wallThickness,
   }
 }
 
@@ -104,6 +107,7 @@ function placeRoof(levelId: string, bbox: ReturnType<typeof wallsBBox>): string 
     rightWidth: slopeWidth,
     eaveOverhang: 0,
     rakeOverhang: 0,
+    wallThickness: bbox.wallThickness,
   })
   createNode(roof, levelId as AnyNodeId)
   sfxEmitter.emit('sfx:structure-build')

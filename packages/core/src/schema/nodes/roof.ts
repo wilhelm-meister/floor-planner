@@ -21,6 +21,8 @@ export const RoofNode = BaseNode.extend({
   eaveOverhang: z.number().default(0.4),
   // Overhang at gable ends / rake (in meters, default 0.3m)
   rakeOverhang: z.number().default(0.3),
+  // Gable wall thickness — should match the building wall thickness below (default 0.1m)
+  wallThickness: z.number().default(0.1),
 }).describe(
   dedent`
   Roof node - used to represent a gable roof in the building

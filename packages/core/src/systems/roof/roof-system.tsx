@@ -13,7 +13,7 @@ const THICKNESS_B = 0.1 // Structure thickness (10cm)
 const ROOF_COVER_OVERHANG = 0.05 // Extension of cover past structure (5cm)
 const EAVE_OVERHANG = 0.4 // Horizontal eave overhang (40cm)
 const RAKE_OVERHANG = 0.3 // Overhang at gable ends (30cm)
-const WALL_THICKNESS = 0.1 // Gable wall thickness — matches default wall thickness (10cm)
+const DEFAULT_WALL_THICKNESS = 0.1 // Fallback if not set on node
 const BASE_HEIGHT = 0.5 // Base height / knee wall / truss heel (50cm)
 
 // ============================================================================
@@ -106,6 +106,7 @@ function getSideProfile(
   width: number,
   roofHeight: number,
   eaveOverhang: number = EAVE_OVERHANG,
+  wallThickness: number = DEFAULT_WALL_THICKNESS,
 ): {
   pointsA: { x: number; y: number }[]
   pointsB: { x: number; y: number }[]
@@ -113,7 +114,7 @@ function getSideProfile(
   pointsC1: { x: number; y: number }[]
   pointsC2: { x: number; y: number }[]
 } {
-  const halfWall = WALL_THICKNESS / 2
+  const halfWall = wallThickness / 2
 
   const rise = Math.max(0, roofHeight - BASE_HEIGHT)
   const run = width - halfWall
@@ -127,7 +128,7 @@ function getSideProfile(
   const ridgeInterfaceY = ridgeUnderY + THICKNESS_B / cosA
   const ridgeTopY = ridgeInterfaceY + THICKNESS_A / cosA
 
-  const wallOuterTopY = BASE_HEIGHT - WALL_THICKNESS * tanA
+  const wallOuterTopY = BASE_HEIGHT - wallThickness * tanA
 
   const overhangDx = eaveOverhang * cosA
 
@@ -198,13 +199,13 @@ function getSideProfile(
  * Generates detailed gable roof geometry with layers, walls, and overhangs
  */
 export function generateRoofGeometry(roofNode: RoofNode): THREE.BufferGeometry {
-  const { length, height, leftWidth, rightWidth, eaveOverhang = EAVE_OVERHANG, rakeOverhang = RAKE_OVERHANG } = roofNode
+  const { length, height, leftWidth, rightWidth, eaveOverhang = EAVE_OVERHANG, rakeOverhang = RAKE_OVERHANG, wallThickness = DEFAULT_WALL_THICKNESS } = roofNode
 
   const ridgeLength = length
 
   // Get profiles for both sides
-  const leftP = getSideProfile(1, leftWidth, height, eaveOverhang)
-  const rightP = getSideProfile(-1, rightWidth, height, eaveOverhang)
+  const leftP = getSideProfile(1, leftWidth, height, eaveOverhang, wallThickness)
+  const rightP = getSideProfile(-1, rightWidth, height, eaveOverhang, wallThickness)
 
   // Create shapes from profiles
   const shapes = {
@@ -222,18 +223,18 @@ export function generateRoofGeometry(roofNode: RoofNode): THREE.BufferGeometry {
 
   // Calculate extrusion lengths and offsets
   const lengths = {
-    A: ridgeLength + 2 * rakeOverhang + 2 * ROOF_COVER_OVERHANG + WALL_THICKNESS,
-    B: ridgeLength + 2 * rakeOverhang + WALL_THICKNESS,
-    Side: ridgeLength + WALL_THICKNESS,
-    Gable: WALL_THICKNESS,
+    A: ridgeLength + 2 * rakeOverhang + 2 * ROOF_COVER_OVERHANG + wallThickness,
+    B: ridgeLength + 2 * rakeOverhang + wallThickness,
+    Side: ridgeLength + wallThickness,
+    Gable: wallThickness,
   }
 
   const offsets = {
-    A: -rakeOverhang - ROOF_COVER_OVERHANG - WALL_THICKNESS / 2,
-    B: -rakeOverhang - WALL_THICKNESS / 2,
-    Side: -WALL_THICKNESS / 2,
-    GableFront: -WALL_THICKNESS / 2,
-    GableBack: ridgeLength - WALL_THICKNESS / 2,
+    A: -rakeOverhang - ROOF_COVER_OVERHANG - wallThickness / 2,
+    B: -rakeOverhang - wallThickness / 2,
+    Side: -wallThickness / 2,
+    GableFront: -wallThickness / 2,
+    GableBack: ridgeLength - wallThickness / 2,
   }
 
   // Helper to create and position extruded geometry
