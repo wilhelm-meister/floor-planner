@@ -196,7 +196,7 @@ export const ZoneTool: React.FC = () => {
       if (!cursorRef.current) return;
 
       const { snapEnabled, snapSize } = useEditor.getState();
-      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v;
+      const snap = (v: number) => (shiftPressed.current ? !snapEnabled : snapEnabled) ? Math.round(v / snapSize) * snapSize : v;
       const gridX = snap(event.position[0]);
       const gridZ = snap(event.position[2]);
       cursorPosition = [gridX, gridZ];
@@ -217,7 +217,7 @@ export const ZoneTool: React.FC = () => {
       if (!currentLevelId) return;
 
       const { snapEnabled, snapSize } = useEditor.getState();
-      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v;
+      const snap = (v: number) => (shiftPressed.current ? !snapEnabled : snapEnabled) ? Math.round(v / snapSize) * snapSize : v;
       const gridX = snap(event.position[0]);
       const gridZ = snap(event.position[2]);
       let clickPoint: [number, number] = [gridX, gridZ];

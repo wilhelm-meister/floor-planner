@@ -90,7 +90,8 @@ export const SlabTool: React.FC = () => {
 
       let gridX: number
       let gridZ: number
-      if (snapEnabled && !shiftPressed.current) {
+      const snapActive = shiftPressed.current ? !snapEnabled : snapEnabled
+      if (snapActive) {
         const inv = 1 / snapSize
         gridX = Math.round(event.position[0] * inv) / inv
         gridZ = Math.round(event.position[2] * inv) / inv
@@ -105,7 +106,7 @@ export const SlabTool: React.FC = () => {
 
       // Calculate snapped display position (bypass snap when Shift is held or snap disabled)
       const lastPoint = points[points.length - 1]
-      const displayPoint = (shiftPressed.current || !lastPoint || !snapEnabled) ? gridPosition : calculateSnapPoint(lastPoint, gridPosition)
+      const displayPoint = (!snapActive || !lastPoint) ? gridPosition : calculateSnapPoint(lastPoint, gridPosition)
       setSnappedCursorPosition(displayPoint)
 
       // Play snap sound when the snapped position actually changes (only when drawing)

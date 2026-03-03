@@ -119,14 +119,14 @@ export const WallTool: React.FC = () => {
       if (!cursorRef.current || !wallPreviewRef.current) return
 
       const { snapEnabled: se, snapSize: ss } = useEditor.getState()
-      const snap = (v: number) => (se && !shiftPressed.current) ? Math.round(v / ss) * ss : v
+      const snapActive = shiftPressed.current ? !se : se
+      const snap = (v: number) => snapActive ? Math.round(v / ss) * ss : v
       gridPosition = [snap(event.position[0]), snap(event.position[2])]
       const cursorPosition = new Vector3(gridPosition[0], event.position[1], gridPosition[1])
 
       if (buildingState.current === 1) {
-        // Snap to 45° angles only if shift is not pressed
-        const { snapEnabled: se } = useEditor.getState()
-        const snapped = (!se || shiftPressed.current)
+        // Snap to 45° angles — Shift inverts current snap state
+        const snapped = !snapActive
           ? cursorPosition
           : snapTo45Degrees(startingPoint.current, cursorPosition)
         endingPoint.current.copy(snapped)

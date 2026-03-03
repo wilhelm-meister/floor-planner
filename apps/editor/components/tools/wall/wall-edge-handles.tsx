@@ -51,7 +51,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       if (!dragTargetRef.current || !nodeRef.current) return
 
       const { snapEnabled, snapSize } = useEditor.getState()
-      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v
+      const snap = (v: number) => (shiftPressed.current ? !snapEnabled : snapEnabled) ? Math.round(v / snapSize) * snapSize : v
       const pos: [number, number] = [snap(event.position[0]), snap(event.position[2])]
       const n = nodeRef.current
 

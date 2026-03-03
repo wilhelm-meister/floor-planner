@@ -11,8 +11,8 @@ export function SnapToggle() {
   const snapSize = useEditor((s) => s.snapSize);
   const snapShiftOverride = useViewer((s) => s.snapShiftOverride);
 
-  // Visually "off" when Shift is held (temporary override during placement)
-  const effectivelyOn = snapEnabled && !snapShiftOverride;
+  // Shift inverts the current snap state visually
+  const effectivelyOn = snapShiftOverride ? !snapEnabled : snapEnabled;
 
   // Write to both stores: useEditor (wall-tool, wall-edge-handles) + useViewer (applySnap in wall-renderer)
   const setSnapEnabled = (enabled: boolean) => {
@@ -41,7 +41,9 @@ export function SnapToggle() {
           </button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          {snapShiftOverride ? "Snap pausiert (Shift)" : snapEnabled ? "Snap deaktivieren" : "Snap aktivieren"}
+          {snapShiftOverride
+            ? (snapEnabled ? "Snap pausiert (Shift)" : "Snap temporär aktiv (Shift)")
+            : (snapEnabled ? "Snap deaktivieren" : "Snap aktivieren")}
         </TooltipContent>
       </Tooltip>
 

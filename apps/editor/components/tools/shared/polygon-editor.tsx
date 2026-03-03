@@ -172,7 +172,8 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
     const onGridMove = (event: GridEvent) => {
       let gridX: number
       let gridZ: number
-      if (snapEnabled && !shiftPressed.current) {
+      const snapActive = shiftPressed.current ? !snapEnabled : snapEnabled
+      if (snapActive) {
         const inv = 1 / snapSize
         gridX = Math.round(event.position[0] * inv) / inv
         gridZ = Math.round(event.position[2] * inv) / inv
