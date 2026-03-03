@@ -202,40 +202,33 @@ const getStrategy = (): SelectionStrategy | null => {
     }
   }
 
-  // Level selected, no zone -> can select zones (only zones on the selected level)
-  if (!zoneId) {
-    return {
-      types: ['zone'],
-      handleClick: (node) => {
-        useViewer.getState().setSelection({ zoneId: (node as ZoneNode).id })
-      },
-      handleDeselect: () => {
-        useViewer.getState().setSelection({ levelId: null })
-      },
-      isValid: (node) => node.type === 'zone' && node.parentId === levelId,
-    }
-  }
-
-  // Zone selected -> can select/hover contents (walls, items, slabs, ceilings, roofs, windows, doors)
+  // Level selected -> can select zones AND contents directly (no zone required)
+  const contentTypes: SelectableNodeType[] = ['wall', 'item', 'slab', 'ceiling', 'roof', 'window', 'door']
   return {
-    types: ['wall', 'item', 'slab', 'ceiling', 'roof', 'window', 'door'],
+    types: ['zone', ...contentTypes],
     handleClick: (node, nativeEvent) => {
-      const { selectedIds } = useViewer.getState().selection
-      useViewer.getState().setSelection({ selectedIds: computeNextIds(node, selectedIds, nativeEvent) })
+      if (node.type === 'zone') {
+        useViewer.getState().setSelection({ zoneId: (node as ZoneNode).id })
+      } else {
+        const { selectedIds } = useViewer.getState().selection
+        useViewer.getState().setSelection({ selectedIds: computeNextIds(node, selectedIds, nativeEvent) })
+      }
     },
     handleDeselect: () => {
-      const { selectedIds } = useViewer.getState().selection
-      // If items are selected, deselect them first; otherwise go back to level
+      const { selectedIds, zoneId: currentZoneId } = useViewer.getState().selection
       if (selectedIds.length > 0) {
         useViewer.getState().setSelection({ selectedIds: [] })
-      } else {
+      } else if (currentZoneId) {
         useViewer.getState().setSelection({ zoneId: null })
+      } else {
+        useViewer.getState().setSelection({ levelId: null })
       }
     },
     isValid: (node) => {
+      if (node.type === 'zone') return node.parentId === levelId
       const validTypes = ['wall', 'item', 'slab', 'ceiling', 'roof', 'window', 'door']
       if (!validTypes.includes(node.type)) return false
-      return isNodeInZone(node, levelId, zoneId)
+      return isNodeOnLevel(node, levelId)
     },
   }
 }
