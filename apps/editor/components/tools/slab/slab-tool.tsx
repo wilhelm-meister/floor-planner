@@ -103,9 +103,9 @@ export const SlabTool: React.FC = () => {
       setCursorPosition(gridPosition)
       setLevelY(event.position[1])
 
-      // Calculate snapped display position (bypass snap when Shift is held)
+      // Calculate snapped display position (bypass snap when Shift is held or snap disabled)
       const lastPoint = points[points.length - 1]
-      const displayPoint = (shiftPressed.current || !lastPoint) ? gridPosition : calculateSnapPoint(lastPoint, gridPosition)
+      const displayPoint = (shiftPressed.current || !lastPoint || !snapEnabled) ? gridPosition : calculateSnapPoint(lastPoint, gridPosition)
       setSnappedCursorPosition(displayPoint)
 
       // Play snap sound when the snapped position actually changes (only when drawing)
