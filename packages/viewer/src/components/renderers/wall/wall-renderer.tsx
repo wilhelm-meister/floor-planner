@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
 import { Plane, Raycaster, type Mesh, Vector2, Vector3 } from 'three'
 import { applySnap } from '../../../lib/snap'
+import { captureGroupState, applyGroupDelta, clearGroupState } from '../../../lib/group-move'
 import useViewer from '../../../store/use-viewer'
 import { emitter } from '@pascal-app/core'
 import { useNodeEvents } from '../../../hooks/use-node-events'
@@ -67,6 +68,9 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       originalEnd: [...node.end] as [number, number],
     }
 
+    // Capture group state for multi-select move
+    const hasGroup = captureGroupState(node.id)
+
     // Shift key toggles snap override during drag
     const onKeyDown = (ev: KeyboardEvent) => {
       if (ev.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
@@ -95,6 +99,9 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       useScene.getState().updateNode(node.id as AnyNodeId, { start: [sx, sz], end: [ex, ez] })
       useScene.getState().dirtyNodes.add(node.id as AnyNodeId)
 
+      // Move other selected nodes with same delta
+      if (hasGroup) applyGroupDelta(deltaX, deltaZ)
+
       // Snap sound when position changes
       const snapKey = `${sx},${sz}`
       if (snapKey !== lastSnapPos) {
@@ -109,6 +116,7 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       useViewer.getState().setSnapShiftOverride(false)
+      clearGroupState()
       if (dragState.current?.active) {
         emitter.emit('sfx:structure-move', undefined)
       }

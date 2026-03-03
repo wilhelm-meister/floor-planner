@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
 import { Plane, Raycaster, Vector2, Vector3, type Mesh } from 'three'
 import { applySnap } from '../../../lib/snap'
+import { captureGroupState, applyGroupDelta, clearGroupState } from '../../../lib/group-move'
 import useViewer from '../../../store/use-viewer'
 import { useNodeEvents } from '../../../hooks/use-node-events'
 
@@ -63,6 +64,8 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
       originalPosition: [...node.position] as [number, number, number],
     }
 
+    const hasGroup = captureGroupState(node.id)
+
     let lastSnapKey: string | null = null
 
     // Shift key toggles snap override during drag
@@ -93,6 +96,8 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
       const newPosition: [number, number, number] = [newX, dragState.current.originalPosition[1], newZ]
       useScene.getState().updateNode(node.id as AnyNodeId, { position: newPosition })
 
+      if (hasGroup) applyGroupDelta(deltaX, deltaZ)
+
       // Snap sound when position changes
       const snapKey = `${newX},${newZ}`
       if (snapKey !== lastSnapKey) {
@@ -107,6 +112,7 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       useViewer.getState().setSnapShiftOverride(false)
+      clearGroupState()
       gl.domElement.releasePointerCapture(ev.pointerId)
       document.body.style.cursor = ''
       if (dragState.current?.active) {
