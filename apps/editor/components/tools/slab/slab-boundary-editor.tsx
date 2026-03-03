@@ -37,6 +37,7 @@ export const SlabBoundaryEditor: React.FC<SlabBoundaryEditorProps> = ({ slabId }
       minVertices={3}
       levelId={resolveLevelId(slab, useScene.getState().nodes)}
       surfaceHeight={slab.elevation ?? 0.05}
+      movable
     />
   )
 }

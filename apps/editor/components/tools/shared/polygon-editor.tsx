@@ -14,6 +14,13 @@ type DragState = {
   pointerId: number
 }
 
+type MoveDragState = {
+  isDragging: boolean
+  startCursor: [number, number]
+  startPolygon: Array<[number, number]>
+  pointerId: number
+}
+
 export interface PolygonEditorProps {
   polygon: Array<[number, number]>
   color?: string
@@ -23,6 +30,8 @@ export interface PolygonEditorProps {
   levelId?: string
   /** Height of the surface being edited (e.g. slab elevation). Handles adapt to this. */
   surfaceHeight?: number
+  /** If true, shows a center drag handle to move the entire polygon. */
+  movable?: boolean
 }
 
 /**
@@ -38,6 +47,7 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
   minVertices = 3,
   levelId,
   surfaceHeight = 0,
+  movable = false,
 }) => {
   // Get level node from registry if levelId is provided
   const levelNode = levelId ? sceneRegistry.nodes.get(levelId) : null
@@ -51,6 +61,8 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
 
   // Local state for dragging
   const [dragState, setDragState] = useState<DragState | null>(null)
+  const [moveDragState, setMoveDragState] = useState<MoveDragState | null>(null)
+  const [hoveredCenter, setHoveredCenter] = useState(false)
   const [previewPolygon, setPreviewPolygon] = useState<Array<[number, number]> | null>(null)
   const [hoveredVertex, setHoveredVertex] = useState<number | null>(null)
   const [hoveredMidpoint, setHoveredMidpoint] = useState<number | null>(null)
@@ -70,6 +82,14 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
 
   // The polygon to display (preview during drag, or actual polygon)
   const displayPolygon = previewPolygon ?? polygon
+
+  // Calculate centroid of the polygon
+  const centroid = useMemo((): [number, number] => {
+    if (displayPolygon.length === 0) return [0, 0]
+    const sumX = displayPolygon.reduce((s, [x]) => s + x!, 0)
+    const sumZ = displayPolygon.reduce((s, [, z]) => s + z!, 0)
+    return [sumX / displayPolygon.length, sumZ / displayPolygon.length]
+  }, [displayPolygon])
 
   // Calculate midpoints for adding new vertices
   const midpoints = useMemo(() => {
@@ -158,6 +178,16 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
       if (dragState?.isDragging) {
         handleVertexDrag(dragState.vertexIndex)
       }
+
+      // Move entire polygon during center drag
+      if (moveDragState?.isDragging) {
+        const dx = gridX - moveDragState.startCursor[0]
+        const dz = gridZ - moveDragState.startCursor[1]
+        const movedPolygon = moveDragState.startPolygon.map(
+          ([x, z]) => [x! + dx, z! + dz] as [number, number]
+        )
+        setPreviewPolygon(movedPolygon)
+      }
     }
 
     emitter.on('grid:move', onGridMove)
@@ -165,6 +195,29 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
       emitter.off('grid:move', onGridMove)
     }
   }, [dragState, handleVertexDrag])
+
+  // Set up pointer up listener for ending move drag
+  useEffect(() => {
+    if (!moveDragState?.isDragging) return
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (e.pointerId !== moveDragState.pointerId) return
+      e.stopImmediatePropagation()
+      e.preventDefault()
+      const suppressClick = (ce: MouseEvent) => {
+        ce.stopImmediatePropagation()
+        ce.preventDefault()
+        window.removeEventListener('click', suppressClick, true)
+      }
+      window.addEventListener('click', suppressClick, true)
+      requestAnimationFrame(() => window.removeEventListener('click', suppressClick, true))
+      commitPolygonChange()
+      setMoveDragState(null)
+    }
+
+    window.addEventListener('pointerup', handlePointerUp, true)
+    return () => window.removeEventListener('pointerup', handlePointerUp, true)
+  }, [moveDragState, commitPolygonChange])
 
   // Set up pointer up listener for ending drag
   useEffect(() => {
@@ -288,6 +341,29 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
           </mesh>
         )
       })}
+
+      {/* Center move handle — only when movable and not dragging a vertex */}
+      {movable && !dragState && !moveDragState && (
+        <mesh
+          position={[centroid[0], editY + Math.max(MIN_HANDLE_HEIGHT, surfaceHeight + 0.02) / 2 + 0.01, centroid[1]]}
+          onPointerEnter={(e) => { e.stopPropagation(); setHoveredCenter(true) }}
+          onPointerLeave={(e) => { e.stopPropagation(); setHoveredCenter(false) }}
+          onPointerDown={(e) => {
+            if (e.button !== 0) return
+            e.stopPropagation()
+            setMoveDragState({
+              isDragging: true,
+              startCursor: cursorPosition,
+              startPolygon: [...(previewPolygon ?? polygon)],
+              pointerId: e.nativeEvent.pointerId,
+            })
+          }}
+          onClick={(e) => { if (e.button !== 0) return; e.stopPropagation() }}
+        >
+          <cylinderGeometry args={[0.18, 0.18, 0.06, 24]} />
+          <meshStandardMaterial color={hoveredCenter ? '#f59e0b' : '#fbbf24'} />
+        </mesh>
+      )}
 
       {/* Midpoint handles - smaller green cylinders for adding vertices (hidden while dragging) */}
       {!dragState &&
