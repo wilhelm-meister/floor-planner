@@ -40,6 +40,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   nodeRef.current = node
   const liveStartRef = useRef<[number, number] | null>(null)
   const liveEndRef = useRef<[number, number] | null>(null)
+  const shiftPressed = useRef(false)
 
   // Track drag position via grid:move — only update React state (no store writes)
   useEffect(() => {
@@ -49,7 +50,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       if (!dragTargetRef.current || !nodeRef.current) return
 
       const { snapEnabled, snapSize } = useEditor.getState()
-      const snap = (v: number) => snapEnabled ? Math.round(v / snapSize) * snapSize : v
+      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v
       const pos: [number, number] = [snap(event.position[0]), snap(event.position[2])]
       const n = nodeRef.current
 
@@ -75,8 +76,27 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       }
     }
 
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = true
+        useEditor.getState().setSnapShiftOverride(true)
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = false
+        useEditor.getState().setSnapShiftOverride(false)
+      }
+    }
+
     emitter.on('grid:move', onGridMove)
-    return () => emitter.off('grid:move', onGridMove)
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('keyup', onKeyUp)
+    return () => {
+      emitter.off('grid:move', onGridMove)
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('keyup', onKeyUp)
+    }
   }, [])
 
   // Commit to store on pointerUp (single geometry rebuild)
