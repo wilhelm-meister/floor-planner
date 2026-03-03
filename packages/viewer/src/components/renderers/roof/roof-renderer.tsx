@@ -21,6 +21,7 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
     startWorld: Vector3
     originalPosition: [number, number, number]
   } | null>(null)
+  const wasDragging = useRef(false)
 
   // Fallback cleanup on unmount
   useEffect(() => {
@@ -97,6 +98,9 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
       document.body.style.cursor = ''
       if (dragState.current?.active) {
         emitter.emit('sfx:structure-move', undefined)
+        wasDragging.current = true
+      } else {
+        wasDragging.current = false
       }
       dragState.current = null
     }
@@ -108,11 +112,11 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
   }, [node.id, node.position, getWorldPos, gl, handlers])
 
   const onPointerUp = useCallback((e: any) => {
-    if (!dragState.current) return
-    if (!dragState.current.active) {
+    // If no drag happened, emit click for selection
+    if (!wasDragging.current) {
       handlers.onPointerUp?.(e)
     }
-    dragState.current = null
+    wasDragging.current = false
   }, [handlers])
 
   return (
