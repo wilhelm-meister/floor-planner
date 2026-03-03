@@ -58,6 +58,7 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
 
   const snapEnabled = useEditor((s) => s.snapEnabled)
   const snapSize = useEditor((s) => s.snapSize)
+  const shiftPressed = useRef(false)
 
   // Local state for dragging
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -152,10 +153,25 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
 
   // Listen to grid:move events to track cursor position
   useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = true
+        useEditor.getState().setSnapShiftOverride(true)
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = false
+        useEditor.getState().setSnapShiftOverride(false)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('keyup', onKeyUp)
+
     const onGridMove = (event: GridEvent) => {
       let gridX: number
       let gridZ: number
-      if (snapEnabled) {
+      if (snapEnabled && !shiftPressed.current) {
         const inv = 1 / snapSize
         gridX = Math.round(event.position[0] * inv) / inv
         gridZ = Math.round(event.position[2] * inv) / inv
@@ -193,6 +209,8 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
     emitter.on('grid:move', onGridMove)
     return () => {
       emitter.off('grid:move', onGridMove)
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('keyup', onKeyUp)
     }
   }, [dragState, handleVertexDrag])
 
