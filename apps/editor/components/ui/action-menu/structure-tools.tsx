@@ -118,10 +118,7 @@ export function StructureTools() {
                     useEditor.getState().setMode('build')
                   }
 
-                  // Auto-switch to top level for roof tool
-                  if (tool.id === 'roof') {
-                    ensureRoofLevel(toastRef)
-                  }
+                  // No auto-level switch needed — roof auto-fits to walls
                 }
               }}
               size="icon"

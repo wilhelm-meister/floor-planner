@@ -153,7 +153,7 @@ export const deleteNodesAction = (
   })
 
   
-  // Trigger a full scene re-validation after deleting node (as deleting a slab can cause widespread changes to level elevations)
+  // Trigger a full scene re-validation after deleting node
   const currentNodes = get().nodes
   Object.values(currentNodes).forEach((node) => {
     get().markDirty(node.id)
