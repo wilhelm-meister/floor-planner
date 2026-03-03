@@ -20,7 +20,7 @@ import useEditor from '@/store/use-editor'
 const DEFAULT_HEIGHT = 1.5
 const DEFAULT_WALL_HEIGHT = 2.5
 const BASE_HEIGHT = 0.5   // must match knee-wall height in roof-system
-const PADDING = 0.3
+const PADDING = 0   // roof-system already adds eaveOverhang + rakeOverhang on top
 const SNAP_DIST = 0.1
 
 // ──────────────────────────────────────────────────────────────
