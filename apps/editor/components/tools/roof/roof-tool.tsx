@@ -42,9 +42,12 @@ const commitRoofPlacement = (
   const roofCount = Object.values(nodes).filter((n) => n.type === 'roof').length
   const name = `Roof ${roofCount + 1}`
 
+  // Use the level Y from the placement click so the roof sits on the correct floor
+  const levelY = corner1[1]
+
   const roof = RoofNode.parse({
     name,
-    position: [centerX, 0, centerZ], // Y is always 0
+    position: [centerX, levelY, centerZ],
     length: Math.max(length, 0.5),
     height: DEFAULT_HEIGHT,
     leftWidth: slopeWidth,
