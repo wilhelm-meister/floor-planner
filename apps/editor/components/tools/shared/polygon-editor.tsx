@@ -3,6 +3,7 @@ import { createPortal } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry, Float32BufferAttribute, type Mesh } from 'three'
 import { sfxEmitter } from '@/lib/sfx-bus'
+import useEditor from '@/store/use-editor'
 
 const Y_OFFSET = 0.02
 
@@ -44,6 +45,9 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
   // When using portal, edit at Y_OFFSET (local to level)
   // When not using portal, edit at world origin
   const editY = levelNode ? Y_OFFSET : 0
+
+  const snapEnabled = useEditor((s) => s.snapEnabled)
+  const snapSize = useEditor((s) => s.snapSize)
 
   // Local state for dragging
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -129,8 +133,16 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
   // Listen to grid:move events to track cursor position
   useEffect(() => {
     const onGridMove = (event: GridEvent) => {
-      const gridX = Math.round(event.position[0] * 2) / 2
-      const gridZ = Math.round(event.position[2] * 2) / 2
+      let gridX: number
+      let gridZ: number
+      if (snapEnabled) {
+        const inv = 1 / snapSize
+        gridX = Math.round(event.position[0] * inv) / inv
+        gridZ = Math.round(event.position[2] * inv) / inv
+      } else {
+        gridX = event.position[0]
+        gridZ = event.position[2]
+      }
       const newPosition: [number, number] = [gridX, gridZ]
 
       // Play snap sound when cursor moves to a new grid cell during drag
