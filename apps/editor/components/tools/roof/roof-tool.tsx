@@ -93,9 +93,8 @@ function getLevelFloorY(levelId: string): number {
 
 function placeRoof(levelId: string, bbox: ReturnType<typeof wallsBBox>): string {
   const { createNode, nodes } = useScene.getState()
-  const floorY = getLevelFloorY(levelId)
-  // roof position Y = top of walls (y=0 of geometry = wall top)
-  const roofY = floorY + bbox.wallHeight
+  // roof position Y in level-local space = top of walls
+  const roofY = bbox.wallHeight
   const slopeWidth = Math.max(bbox.width / 2, 0.5)
   const roofCount = Object.values(nodes).filter((n) => n.type === 'roof').length
   const roof = RoofNode.parse({
