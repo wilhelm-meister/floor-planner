@@ -105,7 +105,8 @@ export const ZoneTool: React.FC = () => {
   const mainLineRef = useRef<Line>(null!);
   const closingLineRef = useRef<Line>(null!);
   const pointsRef = useRef<Array<[number, number]>>([]);
-  const levelYRef = useRef(0); // Track current level Y position
+  const levelYRef = useRef(0);
+  const shiftPressed = useRef(false);
   const currentLevelId = useViewer((state) => state.selection.levelId);
   const setTool = useEditor((state) => state.setTool);
 
@@ -194,15 +195,15 @@ export const ZoneTool: React.FC = () => {
     const onGridMove = (event: GridEvent) => {
       if (!cursorRef.current) return;
 
-      // Snap to 0.5 grid
-      const gridX = Math.round(event.position[0] * 2) / 2;
-      const gridZ = Math.round(event.position[2] * 2) / 2;
+      const { snapEnabled, snapSize } = useEditor.getState();
+      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v;
+      const gridX = snap(event.position[0]);
+      const gridZ = snap(event.position[2]);
       cursorPosition = [gridX, gridZ];
       levelYRef.current = event.position[1];
 
-      // If we have points, snap to axis from last point
       const lastPoint = pointsRef.current[pointsRef.current.length - 1];
-      if (lastPoint) {
+      if (lastPoint && !shiftPressed.current) {
         const snapped = calculateSnapPoint(lastPoint, cursorPosition);
         cursorRef.current.position.set(snapped[0], event.position[1], snapped[1]);
       } else {
@@ -215,13 +216,14 @@ export const ZoneTool: React.FC = () => {
     const onGridClick = (event: GridEvent) => {
       if (!currentLevelId) return;
 
-      const gridX = Math.round(event.position[0] * 2) / 2;
-      const gridZ = Math.round(event.position[2] * 2) / 2;
+      const { snapEnabled, snapSize } = useEditor.getState();
+      const snap = (v: number) => (snapEnabled && !shiftPressed.current) ? Math.round(v / snapSize) * snapSize : v;
+      const gridX = snap(event.position[0]);
+      const gridZ = snap(event.position[2]);
       let clickPoint: [number, number] = [gridX, gridZ];
 
-      // Snap to axis from last point
       const lastPoint = pointsRef.current[pointsRef.current.length - 1];
-      if (lastPoint) {
+      if (lastPoint && !shiftPressed.current) {
         clickPoint = calculateSnapPoint(lastPoint, clickPoint);
       }
 
@@ -264,14 +266,31 @@ export const ZoneTool: React.FC = () => {
     };
 
     // Subscribe to events
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = true;
+        useEditor.getState().setSnapShiftOverride(true);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = false;
+        useEditor.getState().setSnapShiftOverride(false);
+      }
+    };
+
     emitter.on("grid:move", onGridMove);
     emitter.on("grid:click", onGridClick);
     emitter.on("grid:double-click", onGridDoubleClick);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
 
     return () => {
       emitter.off("grid:move", onGridMove);
       emitter.off("grid:click", onGridClick);
       emitter.off("grid:double-click", onGridDoubleClick);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
 
       // Reset state on unmount
       pointsRef.current = [];
