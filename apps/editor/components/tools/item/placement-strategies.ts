@@ -35,11 +35,15 @@ const DEFAULT_DIMENSIONS: [number, number, number] = [1, 1, 1]
 // Mutable ref: set to true while Shift is held to bypass snap temporarily
 export const snapOverrideRef = { shiftFree: false }
 
-// Snap helpers — respect global toggle AND Shift override
+// Snap helpers — Shift inverts the current snap state
+const isSnapActive = (): boolean => {
+  const enabled = useEditor.getState().snapEnabled
+  return snapOverrideRef.shiftFree ? !enabled : enabled
+}
 const sg = (pos: number, dim: number): number =>
-  (!snapOverrideRef.shiftFree && useEditor.getState().snapEnabled) ? snapToGrid(pos, dim) : pos
+  isSnapActive() ? snapToGrid(pos, dim) : pos
 const sh = (v: number): number =>
-  (!snapOverrideRef.shiftFree && useEditor.getState().snapEnabled) ? snapToHalf(v) : v
+  isSnapActive() ? snapToHalf(v) : v
 
 // ============================================================================
 // FLOOR STRATEGY

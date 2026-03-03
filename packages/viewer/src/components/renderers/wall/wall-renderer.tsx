@@ -67,6 +67,16 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
       originalEnd: [...node.end] as [number, number],
     }
 
+    // Shift key toggles snap override during drag
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
+    }
+    const onKeyUp = (ev: KeyboardEvent) => {
+      if (ev.key === 'Shift') useViewer.getState().setSnapShiftOverride(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+
     // Window-level pointermove: fires even when pointer moves outside the mesh (fast drag)
     let lastSnapPos: string | null = null
     const onWindowMove = (ev: PointerEvent) => {
@@ -96,6 +106,9 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
     const cleanup = (ev: PointerEvent) => {
       window.removeEventListener('pointermove', onWindowMove)
       window.removeEventListener('pointerup', cleanup)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      useViewer.getState().setSnapShiftOverride(false)
       if (dragState.current?.active) {
         emitter.emit('sfx:structure-move', undefined)
       }

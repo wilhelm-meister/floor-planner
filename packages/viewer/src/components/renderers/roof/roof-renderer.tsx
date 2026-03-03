@@ -65,6 +65,16 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
 
     let lastSnapKey: string | null = null
 
+    // Shift key toggles snap override during drag
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
+    }
+    const onKeyUp = (ev: KeyboardEvent) => {
+      if (ev.key === 'Shift') useViewer.getState().setSnapShiftOverride(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+
     const onWindowMove = (ev: PointerEvent) => {
       if (!dragState.current) return
       const dx = ev.clientX - dragState.current.startMouse.x
@@ -94,6 +104,9 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
     const cleanup = (ev: PointerEvent) => {
       window.removeEventListener('pointermove', onWindowMove)
       window.removeEventListener('pointerup', cleanup as EventListener)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      useViewer.getState().setSnapShiftOverride(false)
       gl.domElement.releasePointerCapture(ev.pointerId)
       document.body.style.cursor = ''
       if (dragState.current?.active) {
