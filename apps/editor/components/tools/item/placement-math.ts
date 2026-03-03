@@ -13,10 +13,12 @@ export function snapToGrid(position: number, dimension: number): number {
 }
 
 /**
- * Snap a value to 0.5 increments (used for wall-local positions).
+ * Snap a value to the given grid size (used for wall-local positions).
+ * Falls back to 0.5 if no size is provided.
  */
-export function snapToHalf(value: number): number {
-  return Math.round(value * 2) / 2
+export function snapToHalf(value: number, gridSize = 0.5): number {
+  if (gridSize <= 0) return value  // no snap
+  return Math.round(value / gridSize) * gridSize
 }
 
 /**

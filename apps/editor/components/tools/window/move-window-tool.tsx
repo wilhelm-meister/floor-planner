@@ -79,6 +79,10 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
       if (wallId) useScene.getState().dirtyNodes.add(wallId as AnyNodeId)
     }
 
+    const getSnapGrid = () => {
+      const { snapEnabled, snapSize } = useEditor.getState()
+      return snapEnabled ? snapSize : 0
+    }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {
       const id = getLevelId()
@@ -117,8 +121,8 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX, localY,
         movingWindowNode.width, movingWindowNode.height,
@@ -161,8 +165,8 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX, localY,
         movingWindowNode.width, movingWindowNode.height,
@@ -204,8 +208,8 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
       const side = getSideFromNormal(event.normal)
       const itemRotation = calculateItemRotation(event.normal)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX, localY,
         movingWindowNode.width, movingWindowNode.height,

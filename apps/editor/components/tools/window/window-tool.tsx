@@ -20,6 +20,7 @@ import {
 } from '../item/placement-math'
 import { clampToWall, hasWallChildOverlap, wallLocalToWorld } from './window-math'
 import { sfxEmitter } from '../../../lib/sfx-bus'
+import useEditor from '../../../store/use-editor'
 
 // Shared edge material — reuse across renders, just toggle color
 const edgeMaterial = new LineBasicNodeMaterial({
@@ -41,6 +42,10 @@ export const WindowTool: React.FC = () => {
   useEffect(() => {
     useScene.temporal.getState().pause()
 
+    const getSnapGrid = () => {
+      const { snapEnabled, snapSize } = useEditor.getState()
+      return snapEnabled ? snapSize : 0
+    }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {
       const id = getLevelId()
@@ -96,8 +101,8 @@ export const WindowTool: React.FC = () => {
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
 
       const width = 1.5
       const height = 1.5
@@ -135,8 +140,8 @@ export const WindowTool: React.FC = () => {
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
 
       const width = draftRef.current?.width ?? 1.5
       const height = draftRef.current?.height ?? 1.5
@@ -175,8 +180,8 @@ export const WindowTool: React.FC = () => {
       const side = getSideFromNormal(event.normal)
       const itemRotation = calculateItemRotation(event.normal)
 
-      const localX = snapToHalf(event.localPosition[0])
-      const localY = snapToHalf(event.localPosition[1])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
+      const localY = snapToHalf(event.localPosition[1], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX, localY,
         draftRef.current.width, draftRef.current.height,

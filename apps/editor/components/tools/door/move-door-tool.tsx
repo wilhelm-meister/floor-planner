@@ -65,6 +65,10 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
       if (wallId) useScene.getState().dirtyNodes.add(wallId as AnyNodeId)
     }
 
+    const getSnapGrid = () => {
+      const { snapEnabled, snapSize } = useEditor.getState()
+      return snapEnabled ? snapSize : 0
+    }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {
       const id = getLevelId()
@@ -102,7 +106,7 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX,
         movingDoorNode.width, movingDoorNode.height,
@@ -144,7 +148,7 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX,
         movingDoorNode.width, movingDoorNode.height,
@@ -185,7 +189,7 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
       const side = getSideFromNormal(event.normal)
       const itemRotation = calculateItemRotation(event.normal)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX,
         movingDoorNode.width, movingDoorNode.height,

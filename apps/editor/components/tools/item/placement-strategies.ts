@@ -42,8 +42,11 @@ const isSnapActive = (): boolean => {
 }
 const sg = (pos: number, dim: number): number =>
   isSnapActive() ? snapToGrid(pos, dim) : pos
-const sh = (v: number): number =>
-  isSnapActive() ? snapToHalf(v) : v
+const sh = (v: number): number => {
+  if (!isSnapActive()) return v
+  const { snapSize } = useEditor.getState()
+  return snapToHalf(v, snapSize)
+}
 
 // ============================================================================
 // FLOOR STRATEGY

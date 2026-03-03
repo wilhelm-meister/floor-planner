@@ -20,6 +20,7 @@ import {
 } from '../item/placement-math'
 import { clampToWall, hasWallChildOverlap, wallLocalToWorld } from './door-math'
 import { sfxEmitter } from '../../../lib/sfx-bus'
+import useEditor from '../../../store/use-editor'
 
 const edgeMaterial = new LineBasicNodeMaterial({
   color: 0xef4444,
@@ -40,6 +41,10 @@ export const DoorTool: React.FC = () => {
   useEffect(() => {
     useScene.temporal.getState().pause()
 
+    const getSnapGrid = () => {
+      const { snapEnabled, snapSize } = useEditor.getState()
+      return snapEnabled ? snapSize : 0
+    }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {
       const id = getLevelId()
@@ -93,7 +98,7 @@ export const DoorTool: React.FC = () => {
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const width = 0.9
       const height = 2.1
 
@@ -129,7 +134,7 @@ export const DoorTool: React.FC = () => {
       const itemRotation = calculateItemRotation(event.normal)
       const cursorRotation = calculateCursorRotation(event.normal, event.node.start, event.node.end)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const width = draftRef.current?.width ?? 0.9
       const height = draftRef.current?.height ?? 2.1
 
@@ -166,7 +171,7 @@ export const DoorTool: React.FC = () => {
       const side = getSideFromNormal(event.normal)
       const itemRotation = calculateItemRotation(event.normal)
 
-      const localX = snapToHalf(event.localPosition[0])
+      const localX = snapToHalf(event.localPosition[0], getSnapGrid())
       const { clampedX, clampedY } = clampToWall(
         event.node, localX,
         draftRef.current.width, draftRef.current.height,
