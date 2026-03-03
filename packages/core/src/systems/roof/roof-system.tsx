@@ -13,7 +13,7 @@ const THICKNESS_B = 0.1 // Structure thickness (10cm)
 const ROOF_COVER_OVERHANG = 0.05 // Extension of cover past structure (5cm)
 const EAVE_OVERHANG = 0.4 // Horizontal eave overhang (40cm)
 const RAKE_OVERHANG = 0.3 // Overhang at gable ends (30cm)
-const WALL_THICKNESS = 0.2 // Gable wall thickness (20cm)
+const WALL_THICKNESS = 0.1 // Gable wall thickness — matches default wall thickness (10cm)
 const BASE_HEIGHT = 0.5 // Base height / knee wall / truss heel (50cm)
 
 // ============================================================================
