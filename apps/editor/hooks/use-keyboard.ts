@@ -23,7 +23,7 @@ export const useKeyboard = () => {
         useEditor.getState().setSelectedReferenceId(null)
 
         // Always reset shift-snap override (in case Shift was held)
-        useEditor.getState().setSnapShiftOverride(false)
+        useViewer.getState().setSnapShiftOverride(false)
 
         // Always land in select mode — regardless of current mode
         useEditor.getState().setMode('select')

@@ -269,13 +269,13 @@ export const ZoneTool: React.FC = () => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = true;
-        useEditor.getState().setSnapShiftOverride(true);
+        useViewer.getState().setSnapShiftOverride(true);
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = false;
-        useEditor.getState().setSnapShiftOverride(false);
+        useViewer.getState().setSnapShiftOverride(false);
       }
     };
 

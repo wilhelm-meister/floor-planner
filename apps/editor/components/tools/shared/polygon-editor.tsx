@@ -1,4 +1,5 @@
 import { emitter, type GridEvent, sceneRegistry } from '@pascal-app/core'
+import { useViewer } from '@pascal-app/viewer'
 import { createPortal } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry, Float32BufferAttribute, type Mesh } from 'three'
@@ -156,13 +157,13 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = true
-        useEditor.getState().setSnapShiftOverride(true)
+        useViewer.getState().setSnapShiftOverride(true)
       }
     }
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = false
-        useEditor.getState().setSnapShiftOverride(false)
+        useViewer.getState().setSnapShiftOverride(false)
       }
     }
     document.addEventListener('keydown', onKeyDown)

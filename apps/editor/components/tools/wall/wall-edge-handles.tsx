@@ -1,6 +1,7 @@
 'use client'
 
 import { emitter, type GridEvent, type AnyNodeId, type WallNode, useScene } from '@pascal-app/core'
+import { useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
 import { DoubleSide, Shape, ShapeGeometry, Vector3 } from 'three'
@@ -79,13 +80,13 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = true
-        useEditor.getState().setSnapShiftOverride(true)
+        useViewer.getState().setSnapShiftOverride(true)
       }
     }
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         shiftPressed.current = false
-        useEditor.getState().setSnapShiftOverride(false)
+        useViewer.getState().setSnapShiftOverride(false)
       }
     }
 

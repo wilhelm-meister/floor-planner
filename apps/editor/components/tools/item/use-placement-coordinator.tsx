@@ -596,7 +596,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
       if (event.key === 'Shift') {
         shiftFreeRef.current = true
         snapOverrideRef.shiftFree = true
-        useEditor.getState().setSnapShiftOverride(true)
+        useViewer.getState().setSnapShiftOverride(true)
         revalidate()
         return
       }
@@ -627,7 +627,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
       if (event.key === 'Shift') {
         shiftFreeRef.current = false
         snapOverrideRef.shiftFree = false
-        useEditor.getState().setSnapShiftOverride(false)
+        useViewer.getState().setSnapShiftOverride(false)
         revalidate()
       }
     }

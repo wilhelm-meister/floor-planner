@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function SnapToggle() {
   const snapEnabled = useEditor((s) => s.snapEnabled);
   const snapSize = useEditor((s) => s.snapSize);
-  const snapShiftOverride = useEditor((s) => s.snapShiftOverride);
+  const snapShiftOverride = useViewer((s) => s.snapShiftOverride);
 
   // Visually "off" when Shift is held (temporary override during placement)
   const effectivelyOn = snapEnabled && !snapShiftOverride;

@@ -11,9 +11,9 @@ export function getSnapSettings() {
   return { snapEnabled, snapSize }
 }
 
-/** Wendet Snap auf x/z an, falls aktiviert */
+/** Wendet Snap auf x/z an, falls aktiviert (respektiert Shift-Override) */
 export function applySnap(x: number, z: number): [number, number] {
-  const { snapEnabled, snapSize } = useViewer.getState()
-  if (!snapEnabled) return [x, z]
+  const { snapEnabled, snapSize, snapShiftOverride } = useViewer.getState()
+  if (!snapEnabled || snapShiftOverride) return [x, z]
   return [snapValue(x, snapSize), snapValue(z, snapSize)]
 }

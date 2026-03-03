@@ -54,6 +54,8 @@ type ViewerState = {
   setSnapEnabled: (enabled: boolean) => void
   snapSize: 0.25 | 0.5
   setSnapSize: (size: 0.25 | 0.5) => void
+  snapShiftOverride: boolean
+  setSnapShiftOverride: (v: boolean) => void
 
   projectId: string | null
   setProjectId: (id: string | null) => void
@@ -135,6 +137,8 @@ const useViewer = create<ViewerState>()(
       setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
       snapSize: 0.25,
       setSnapSize: (size) => set({ snapSize: size }),
+      snapShiftOverride: false,
+      setSnapShiftOverride: (v) => set({ snapShiftOverride: v }),
 
       projectId: null,
       setProjectId: (id) =>
