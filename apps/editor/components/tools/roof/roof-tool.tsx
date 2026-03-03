@@ -103,6 +103,8 @@ function placeRoof(levelId: string, bbox: ReturnType<typeof wallsBBox>): string 
     height: DEFAULT_HEIGHT,
     leftWidth: slopeWidth,
     rightWidth: slopeWidth,
+    eaveOverhang: 0,
+    rakeOverhang: 0,
   })
   createNode(roof, levelId as AnyNodeId)
   sfxEmitter.emit('sfx:structure-build')
