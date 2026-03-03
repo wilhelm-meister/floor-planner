@@ -106,8 +106,7 @@ const SELECTION_STRATEGIES: Record<string, SelectionStrategy> = {
 
       if (node.type === 'zone') {
         updates.zoneId = node.id;
-        // Don't reset selectedIds in structure phase for zone, but if we changed level, it might reset them via hierarchy guard.
-        // Wait, the hierarchy guard resets zoneId if levelId changes. That's fine since we provide zoneId.
+        updates.selectedIds = [node.id];
         setSelection(updates);
       } else {
         updates.selectedIds = computeNextIds(node, selection.selectedIds, nativeEvent, modifierKeys);

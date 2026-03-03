@@ -96,12 +96,18 @@ export const useKeyboard = () => {
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
 
-        const selectedNodeIds = useViewer.getState().selection.selectedIds as AnyNodeId[]
+        const { selectedIds, zoneId } = useViewer.getState().selection
+        const selectedNodeIds = selectedIds as AnyNodeId[]
 
-        if (selectedNodeIds.length > 0) {
-          // Play appropriate SFX based on what's being deleted
-          if (selectedNodeIds.length === 1) {
-            const node = useScene.getState().nodes[selectedNodeIds[0]!]
+        // Collect all IDs to delete (selectedIds + zoneId if not already included)
+        const toDelete: AnyNodeId[] = [...selectedNodeIds]
+        if (zoneId && !toDelete.includes(zoneId as AnyNodeId)) {
+          toDelete.push(zoneId as AnyNodeId)
+        }
+
+        if (toDelete.length > 0) {
+          if (toDelete.length === 1) {
+            const node = useScene.getState().nodes[toDelete[0]!]
             if (node?.type === 'item') {
               sfxEmitter.emit('sfx:item-delete')
             } else {
@@ -111,7 +117,8 @@ export const useKeyboard = () => {
             sfxEmitter.emit('sfx:structure-delete')
           }
 
-          useScene.getState().deleteNodes(selectedNodeIds)
+          useScene.getState().deleteNodes(toDelete)
+          useViewer.getState().setSelection({ selectedIds: [], zoneId: null })
         }
       }
     }
