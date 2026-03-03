@@ -90,7 +90,7 @@ export const SlabTool: React.FC = () => {
 
       let gridX: number
       let gridZ: number
-      if (snapEnabled) {
+      if (snapEnabled && !shiftPressed.current) {
         const inv = 1 / snapSize
         gridX = Math.round(event.position[0] * inv) / inv
         gridZ = Math.round(event.position[2] * inv) / inv
@@ -157,8 +157,18 @@ export const SlabTool: React.FC = () => {
       setPoints([])
     }
 
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Shift') shiftPressed.current = true }
-    const onKeyUp = (e: KeyboardEvent) => { if (e.key === 'Shift') shiftPressed.current = false }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = true
+        useEditor.getState().setSnapShiftOverride(true)
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftPressed.current = false
+        useEditor.getState().setSnapShiftOverride(false)
+      }
+    }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
 
