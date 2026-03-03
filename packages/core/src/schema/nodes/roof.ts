@@ -17,6 +17,10 @@ export const RoofNode = BaseNode.extend({
   leftWidth: z.number().default(1.5),
   // Width of the right slope (in meters, measured horizontally from ridge)
   rightWidth: z.number().default(1.5),
+  // Horizontal eave overhang (in meters, default 0.4m)
+  eaveOverhang: z.number().default(0.4),
+  // Overhang at gable ends / rake (in meters, default 0.3m)
+  rakeOverhang: z.number().default(0.3),
 }).describe(
   dedent`
   Roof node - used to represent a gable roof in the building

@@ -82,6 +82,29 @@ export function RoofPanel() {
         />
       </PanelSection>
 
+      <PanelSection title="Overhang">
+        <SliderControl
+          label="Eave"
+          value={Math.round((node.eaveOverhang ?? 0.4) * 100) / 100}
+          onChange={(v) => handleUpdate({ eaveOverhang: v })}
+          min={0}
+          max={2}
+          precision={2}
+          step={0.05}
+          unit="m"
+        />
+        <SliderControl
+          label="Rake"
+          value={Math.round((node.rakeOverhang ?? 0.3) * 100) / 100}
+          onChange={(v) => handleUpdate({ rakeOverhang: v })}
+          min={0}
+          max={2}
+          precision={2}
+          step={0.05}
+          unit="m"
+        />
+      </PanelSection>
+
       <PanelSection title="Slope Widths">
         <div className="flex items-center justify-between px-2 pb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
           <span>Widths</span>

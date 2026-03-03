@@ -105,6 +105,7 @@ function getSideProfile(
   dir: 1 | -1,
   width: number,
   roofHeight: number,
+  eaveOverhang: number = EAVE_OVERHANG,
 ): {
   pointsA: { x: number; y: number }[]
   pointsB: { x: number; y: number }[]
@@ -128,7 +129,7 @@ function getSideProfile(
 
   const wallOuterTopY = BASE_HEIGHT - WALL_THICKNESS * tanA
 
-  const overhangDx = EAVE_OVERHANG * cosA
+  const overhangDx = eaveOverhang * cosA
 
   const eaveTopZ = width + halfWall + overhangDx
   const eaveTopY = ridgeTopY - eaveTopZ * tanA
@@ -197,13 +198,13 @@ function getSideProfile(
  * Generates detailed gable roof geometry with layers, walls, and overhangs
  */
 export function generateRoofGeometry(roofNode: RoofNode): THREE.BufferGeometry {
-  const { length, height, leftWidth, rightWidth } = roofNode
+  const { length, height, leftWidth, rightWidth, eaveOverhang = EAVE_OVERHANG, rakeOverhang = RAKE_OVERHANG } = roofNode
 
   const ridgeLength = length
 
   // Get profiles for both sides
-  const leftP = getSideProfile(1, leftWidth, height)
-  const rightP = getSideProfile(-1, rightWidth, height)
+  const leftP = getSideProfile(1, leftWidth, height, eaveOverhang)
+  const rightP = getSideProfile(-1, rightWidth, height, eaveOverhang)
 
   // Create shapes from profiles
   const shapes = {
@@ -221,15 +222,15 @@ export function generateRoofGeometry(roofNode: RoofNode): THREE.BufferGeometry {
 
   // Calculate extrusion lengths and offsets
   const lengths = {
-    A: ridgeLength + 2 * RAKE_OVERHANG + 2 * ROOF_COVER_OVERHANG + WALL_THICKNESS,
-    B: ridgeLength + 2 * RAKE_OVERHANG + WALL_THICKNESS,
+    A: ridgeLength + 2 * rakeOverhang + 2 * ROOF_COVER_OVERHANG + WALL_THICKNESS,
+    B: ridgeLength + 2 * rakeOverhang + WALL_THICKNESS,
     Side: ridgeLength + WALL_THICKNESS,
     Gable: WALL_THICKNESS,
   }
 
   const offsets = {
-    A: -RAKE_OVERHANG - ROOF_COVER_OVERHANG - WALL_THICKNESS / 2,
-    B: -RAKE_OVERHANG - WALL_THICKNESS / 2,
+    A: -rakeOverhang - ROOF_COVER_OVERHANG - WALL_THICKNESS / 2,
+    B: -rakeOverhang - WALL_THICKNESS / 2,
     Side: -WALL_THICKNESS / 2,
     GableFront: -WALL_THICKNESS / 2,
     GableBack: ridgeLength - WALL_THICKNESS / 2,
