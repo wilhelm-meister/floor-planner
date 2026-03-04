@@ -63,7 +63,7 @@ export function useNodeEvents<T extends NodeType>(node: NodeConfig[T]['node'], t
     onPointerDown: (e: ThreeEvent<PointerEvent>) => {
       if (useViewer.getState().cameraDragging) return
       if (e.button !== 0) return
-      if ((node as any).locked) return  // Locked: keine Interaktion
+      // KEIN locked-check hier — Selektion soll auch bei gesperrten Nodes funktionieren
       emit('pointerdown', e)
     },
     onPointerUp: (e: ThreeEvent<PointerEvent>) => {
@@ -88,6 +88,7 @@ export function useNodeEvents<T extends NodeType>(node: NodeConfig[T]['node'], t
     },
     onPointerMove: (e: ThreeEvent<PointerEvent>) => {
       if (useViewer.getState().cameraDragging) return
+      if ((node as any).locked) return  // Locked: kein Drag über Move-Events
       emit('move', e)
     },
     onDoubleClick: (e: ThreeEvent<PointerEvent>) => {
