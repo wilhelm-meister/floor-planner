@@ -57,8 +57,8 @@ export const ThumbnailGenerator = ({ projectId: propProjectId }: ThumbnailGenera
       const originalClearAlpha = gl.getClearAlpha()
       gl.getClearColor(originalClearColor)
 
-      // Set warm neutral background for thumbnail
-      gl.setClearColor(new THREE.Color('#e8e4de'), 1)
+      // Set dark background for high contrast (white buildings pop on dark)
+      gl.setClearColor(new THREE.Color('#2d3748'), 1)
       gl.clear()
 
       // Render with thumbnail camera — main canvas is never resized
@@ -129,6 +129,13 @@ export const ThumbnailGenerator = ({ projectId: propProjectId }: ThumbnailGenera
   useEffect(() => {
     if (!propProjectId) return
 
+    // Auto-generate thumbnail 5 seconds after project opens
+    const initialTimer = setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        generate(propProjectId)
+      }
+    }, 5000)
+
     const triggerNow = () => generate(propProjectId)
 
     const scheduleOrDefer = () => {
@@ -160,6 +167,7 @@ export const ThumbnailGenerator = ({ projectId: propProjectId }: ThumbnailGenera
     document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
+      clearTimeout(initialTimer)
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
       unsubscribe()
       document.removeEventListener('visibilitychange', onVisibilityChange)
