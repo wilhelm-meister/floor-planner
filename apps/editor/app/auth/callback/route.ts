@@ -7,18 +7,20 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { nanoid } from 'nanoid'
 
 /**
- * OAuth callback handler for Supabase Auth.
- * Exchanges the auth code for a session and upserts the user profile in auth_users.
+ * Auth callback handler for Supabase Auth.
+ *
+ * Handles two flows:
+ *  1. Google OAuth (PKCE) — arrives with ?code=XXX
+ *  2. Magic Link (OTP)    — arrives with ?token_hash=XXX&type=email
+ *
+ * After authentication, upserts the user's profile in auth_users and redirects.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/'
-
-  if (!code) {
-    console.error('[auth/callback] No code in request')
-    return NextResponse.redirect(new URL('/?error=missing_code', origin))
-  }
 
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -36,20 +38,38 @@ export async function GET(request: NextRequest) {
     },
   )
 
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  let supabaseUser: SupabaseUser | null = null
 
-  if (error) {
-    console.error('[auth/callback] exchangeCodeForSession error:', error)
-    return NextResponse.redirect(new URL('/?error=auth_error', origin))
+  if (code) {
+    // --- Google OAuth (PKCE) flow ---
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('[auth/callback] exchangeCodeForSession error:', error)
+      return NextResponse.redirect(new URL('/?error=auth_error', origin))
+    }
+    supabaseUser = data.user
+  } else if (tokenHash && type === 'email') {
+    // --- Magic Link (OTP) flow ---
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'email',
+    })
+    if (error) {
+      console.error('[auth/callback] verifyOtp error:', error)
+      return NextResponse.redirect(new URL('/?error=auth_error', origin))
+    }
+    supabaseUser = data.user ?? null
+  } else {
+    console.error('[auth/callback] No code or token_hash in request')
+    return NextResponse.redirect(new URL('/?error=missing_params', origin))
   }
 
-  const supabaseUser = data.user
   if (supabaseUser?.email) {
     try {
       await upsertUserProfile(supabaseUser)
     } catch (err) {
       console.error('[auth/callback] upsertUserProfile error:', err)
-      // Non-fatal: redirect anyway
+      // Non-fatal: redirect anyway, profile will be created on next /api/auth/me call
     }
   }
 
