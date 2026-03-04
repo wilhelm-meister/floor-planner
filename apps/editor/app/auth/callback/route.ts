@@ -28,9 +28,10 @@ export async function GET(request: NextRequest) {
   const redirectUrl = new URL(next, origin)
   const response = NextResponse.redirect(redirectUrl)
 
+  // Use server-only SUPABASE_ANON_KEY (runtime-resolved, no build-time inlining)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         // Read from the incoming request
@@ -50,8 +51,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     // --- Google OAuth (PKCE) flow ---
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING_URL'
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'MISSING_KEY'
-    console.error('[auth/callback] url:', supabaseUrl, 'key_prefix:', supabaseKey.substring(0, 20))
+    const supabaseKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'MISSING_KEY'
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[auth/callback] exchangeCodeForSession error:', error.message)
