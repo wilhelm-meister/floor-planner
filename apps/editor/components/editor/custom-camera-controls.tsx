@@ -84,6 +84,7 @@ export const CustomCameraControls = () => {
       if (event.code === 'Space') {
         keyState.space = true
         document.body.classList.add('space-pan')
+        useViewer.getState().setCameraDragging(true)
       }
       if (event.code === 'ShiftRight') {
         keyState.shiftRight = true
@@ -104,6 +105,7 @@ export const CustomCameraControls = () => {
       if (event.code === 'Space') {
         keyState.space = false
         document.body.classList.remove('space-pan')
+        useViewer.getState().setCameraDragging(false)
       }
       if (event.code === 'ShiftRight') {
         keyState.shiftRight = false
@@ -120,13 +122,34 @@ export const CustomCameraControls = () => {
       updateConfig()
     }
 
+    // Right-click drag (orbit): block node interactions immediately
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button === 2) {
+        useViewer.getState().setCameraDragging(true)
+      }
+    }
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.button === 2) {
+        // Delay slightly so onRest can take over for inertia
+        requestAnimationFrame(() => {
+          if (!keyState.space) {
+            useViewer.getState().setCameraDragging(false)
+          }
+        })
+      }
+    }
+
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('pointerup', onPointerUp)
     updateConfig()
 
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('keyup', onKeyUp)
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('pointerup', onPointerUp)
     }
   }, [cameraMode])
 
