@@ -77,7 +77,7 @@ const CameraControlsInner = () => {
       controls.current.mouseButtons.middle = CameraControlsImpl.ACTION.SCREEN_PAN
       controls.current.mouseButtons.right = CameraControlsImpl.ACTION.ROTATE
       if (space) {
-        controls.current.mouseButtons.left = CameraControlsImpl.ACTION.SCREEN_PAN
+        controls.current.mouseButtons.left = CameraControlsImpl.ACTION.ROTATE
       }
     }
 
