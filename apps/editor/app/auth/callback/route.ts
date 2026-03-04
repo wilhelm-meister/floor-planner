@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { db, schema } from '@pascal-app/db'
 import { eq, sql } from 'drizzle-orm'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
@@ -14,6 +13,9 @@ import { nanoid } from 'nanoid'
  *  2. Magic Link (OTP)    — arrives with ?token_hash=XXX&type=email
  *
  * After authentication, upserts the user's profile in auth_users and redirects.
+ *
+ * NOTE: In Next.js 15+ Route Handlers, cookies are read-only on the incoming
+ * request. We must set cookies on the outgoing NextResponse object.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -22,16 +24,21 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/'
 
-  const cookieStore = await cookies()
+  // Build the redirect response first so we can attach cookies to it
+  const redirectUrl = new URL(next, origin)
+  const response = NextResponse.redirect(redirectUrl)
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
+        // Read from the incoming request
+        getAll: () => request.cookies.getAll(),
+        // Write to the outgoing response
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
+            response.cookies.set(name, value, options),
           )
         },
       },
@@ -44,7 +51,7 @@ export async function GET(request: NextRequest) {
     // --- Google OAuth (PKCE) flow ---
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
-      console.error('[auth/callback] exchangeCodeForSession error:', error)
+      console.error('[auth/callback] exchangeCodeForSession error:', error.message)
       return NextResponse.redirect(new URL('/?error=auth_error', origin))
     }
     supabaseUser = data.user
@@ -55,7 +62,7 @@ export async function GET(request: NextRequest) {
       type: 'email',
     })
     if (error) {
-      console.error('[auth/callback] verifyOtp error:', error)
+      console.error('[auth/callback] verifyOtp error:', error.message)
       return NextResponse.redirect(new URL('/?error=auth_error', origin))
     }
     supabaseUser = data.user ?? null
@@ -73,7 +80,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL(next, origin))
+  return response
 }
 
 /**
@@ -98,7 +105,7 @@ async function upsertUserProfile(user: SupabaseUser) {
   if (existing.length > 0 && existing[0]) {
     await db
       .update(schema.users)
-      .set({ name, updatedAt: new Date() })
+      .set({ name, image, updatedAt: new Date() })
       .where(eq(schema.users.id, existing[0].id))
   } else {
     await db.insert(schema.users).values({
