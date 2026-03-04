@@ -49,10 +49,13 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     // --- Google OAuth (PKCE) flow ---
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING_URL'
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'MISSING_KEY'
+    console.error('[auth/callback] url:', supabaseUrl, 'key_prefix:', supabaseKey.substring(0, 20))
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[auth/callback] exchangeCodeForSession error:', error.message)
-      return NextResponse.redirect(new URL(`/?error=auth_error&detail=${encodeURIComponent(error.message)}`, origin))
+      return NextResponse.redirect(new URL(`/?error=auth_error&detail=${encodeURIComponent(error.message)}&url=${encodeURIComponent(supabaseUrl)}&key=${encodeURIComponent(supabaseKey.substring(0,15))}`, origin))
     }
     supabaseUser = data.user
   } else if (tokenHash && type === 'email') {
