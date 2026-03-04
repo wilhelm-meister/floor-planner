@@ -52,25 +52,10 @@ function getUserFromCookies(request: NextRequest): { id: string; email: string; 
  */
 export async function GET(request: NextRequest) {
   try {
-    // Debug: show all cookie names received by server
-    const allCookieNames = request.cookies.getAll().map(c => c.name)
-    const chunk0raw = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.0')?.value
-    const chunk1raw = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.1')?.value
-
     const sessionUser = getUserFromCookies(request)
 
     if (!sessionUser?.email) {
-      // Return debug info instead of null
-      return NextResponse.json({
-        _debug: true,
-        error: 'no_session_user',
-        cookieNames: allCookieNames,
-        chunk0present: !!chunk0raw,
-        chunk0prefix: chunk0raw?.substring(0, 30) ?? null,
-        chunk1present: !!chunk1raw,
-        chunk1prefix: chunk1raw?.substring(0, 30) ?? null,
-        parseResult: sessionUser,
-      })
+      return NextResponse.json(null)
     }
 
     // Look up existing profile
@@ -99,6 +84,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(inserted[0] ?? null)
   } catch (error) {
     console.error('[/api/auth/me] error:', error)
-    return NextResponse.json({ _debug: true, error: String(error), stack: (error as Error).stack?.substring(0, 500) })
+    return NextResponse.json(null)
   }
 }
