@@ -212,26 +212,11 @@ export function WalkthroughControls() {
         </mesh>
       )}
 
-      {/* Placement preview — mannequin marker */}
+      {/* Placement preview — flat circle on ground */}
       {isPlacement && (
-        <mesh ref={previewMeshRef} visible={false}>
-          {/* Body */}
-          <group>
-            <mesh position={[0, 0.85, 0]}>
-              <cylinderGeometry args={[0.15, 0.2, 1.4, 8]} />
-              <meshBasicMaterial color="#a855f7" transparent opacity={0.6} />
-            </mesh>
-            {/* Head */}
-            <mesh position={[0, 1.65, 0]}>
-              <sphereGeometry args={[0.15, 12, 12]} />
-              <meshBasicMaterial color="#a855f7" transparent opacity={0.6} />
-            </mesh>
-          </group>
-          {/* Ground ring */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-            <ringGeometry args={[0.3, 0.5, 24]} />
-            <meshBasicMaterial color="#a855f7" transparent opacity={0.4} side={THREE.DoubleSide} />
-          </mesh>
+        <mesh ref={previewMeshRef} visible={false} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+          <circleGeometry args={[0.4, 32]} />
+          <meshBasicMaterial color="#a855f7" transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       )}
     </>
