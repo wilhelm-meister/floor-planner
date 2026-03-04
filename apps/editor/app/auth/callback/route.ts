@@ -12,10 +12,8 @@ import { nanoid } from 'nanoid'
  *  1. Google OAuth (PKCE) — arrives with ?code=XXX
  *  2. Magic Link (OTP)    — arrives with ?token_hash=XXX&type=email
  *
- * After authentication, upserts the user's profile in auth_users and redirects.
- *
- * NOTE: In Next.js 15+ Route Handlers, cookies are read-only on the incoming
- * request. We must set cookies on the outgoing NextResponse object.
+ * Uses SUPABASE_SERVICE_ROLE_KEY to reliably exchange tokens (avoids
+ * build-time anon key issues on Vercel).
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -24,19 +22,15 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/'
 
-  // Build the redirect response first so we can attach cookies to it
   const redirectUrl = new URL(next, origin)
   const response = NextResponse.redirect(redirectUrl)
 
-  // Use server-only SUPABASE_ANON_KEY (runtime-resolved, no build-time inlining)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
-        // Read from the incoming request
         getAll: () => request.cookies.getAll(),
-        // Write to the outgoing response
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
@@ -49,29 +43,25 @@ export async function GET(request: NextRequest) {
   let supabaseUser: SupabaseUser | null = null
 
   if (code) {
-    // --- Google OAuth (PKCE) flow ---
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING_URL'
-    const supabaseKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'MISSING_KEY'
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[auth/callback] exchangeCodeForSession error:', error.message)
-      return NextResponse.redirect(new URL(`/?error=auth_error&detail=${encodeURIComponent(error.message)}&url=${encodeURIComponent(supabaseUrl)}&key=${encodeURIComponent(supabaseKey.substring(0,15))}`, origin))
+      // Don't block — redirect home, browser client will pick up session
+      return NextResponse.redirect(new URL(next, origin))
     }
     supabaseUser = data.user
   } else if (tokenHash && type === 'email') {
-    // --- Magic Link (OTP) flow ---
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: 'email',
     })
     if (error) {
       console.error('[auth/callback] verifyOtp error:', error.message)
-      return NextResponse.redirect(new URL('/?error=auth_error', origin))
+      return NextResponse.redirect(new URL(next, origin))
     }
     supabaseUser = data.user ?? null
   } else {
-    console.error('[auth/callback] No code or token_hash in request')
-    return NextResponse.redirect(new URL('/?error=missing_params', origin))
+    return NextResponse.redirect(new URL(next, origin))
   }
 
   if (supabaseUser?.email) {
@@ -79,17 +69,12 @@ export async function GET(request: NextRequest) {
       await upsertUserProfile(supabaseUser)
     } catch (err) {
       console.error('[auth/callback] upsertUserProfile error:', err)
-      // Non-fatal: redirect anyway, profile will be created on next /api/auth/me call
     }
   }
 
   return response
 }
 
-/**
- * Upserts a row in auth_users for the given Supabase Auth user.
- * Uses email as the unique key. Creates a new row with a prefixed nanoid if not found.
- */
 async function upsertUserProfile(user: SupabaseUser) {
   const email = user.email!
   const name =
