@@ -22,6 +22,15 @@ export default function AuthDebugPage() {
       const meRes = await fetch('/api/auth/me', { cache: 'no-store' })
       const meData = await meRes.json()
 
+      // Extract raw cookie values for debugging
+      const cookieMap: Record<string, string> = {}
+      document.cookie.split(';').forEach(c => {
+        const [k, ...v] = c.trim().split('=')
+        if (k?.includes('supabase') || k?.includes('sb-')) {
+          cookieMap[k.trim()] = v.join('=').substring(0, 200) + '...'
+        }
+      })
+
       setInfo({
         browserSession: sessionData?.session
           ? { user_id: sessionData.session.user?.id, email: sessionData.session.user?.email, expires_at: sessionData.session.expires_at }
@@ -31,6 +40,7 @@ export default function AuthDebugPage() {
         browserUserError: userError?.message ?? null,
         apiAuthMe: meData,
         cookies: document.cookie ? document.cookie.split(';').map(c => c.trim().split('=')[0]) : [],
+        rawCookiePreviews: cookieMap,
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
         keyPrefix: (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').substring(0, 20),
       })
