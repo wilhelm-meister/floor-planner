@@ -12,11 +12,15 @@ export const useKeyboard = () => {
         return
       }
 
+      // In walkthrough mode, only ESC is handled — all other shortcuts are blocked
+      // (WASD are used for movement and would conflict with editor shortcuts)
+      const isWalkthrough = useEditor.getState().walkthroughActive || useEditor.getState().mode === 'walkthrough'
+
       if (e.key === 'Escape') {
         e.preventDefault()
 
         // Exit walkthrough mode if active
-        if (useEditor.getState().walkthroughActive || useEditor.getState().mode === 'walkthrough') {
+        if (isWalkthrough) {
           useEditor.getState().setWalkthroughActive(false)
           useEditor.getState().setWalkthroughPosition(null)
           const prevWallMode = useEditor.getState().previousWallMode
@@ -40,6 +44,9 @@ export const useKeyboard = () => {
 
         // Always land in select mode — regardless of current mode
         useEditor.getState().setMode('select')
+      } else if (isWalkthrough) {
+        // Block all other shortcuts during walkthrough (WASD conflict)
+        return
       } else if (e.key === '1' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
         useEditor.getState().setPhase('site')
