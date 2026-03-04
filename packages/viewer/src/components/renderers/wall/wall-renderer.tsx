@@ -127,8 +127,11 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
     handlers.onPointerDown?.(e)
   }, [node.id, node.start, node.end, getWorldPos, gl, handlers])
 
-  // Mesh onPointerMove kept as no-op (window listener handles it)
-  const onPointerMove = useCallback((_e: any) => {}, [])
+  // Forward pointer move to useNodeEvents so wall:move fires (used by window/door tools)
+  const onPointerMove = useCallback((e: any) => {
+    if (dragState.current?.active) return // Don't emit move during wall drag
+    handlers.onPointerMove?.(e)
+  }, [handlers])
 
   // Mesh onPointerUp: still needed for click→select (R3F ThreeEvent required by useNodeEvents)
   const onPointerUp = useCallback((e: any) => {

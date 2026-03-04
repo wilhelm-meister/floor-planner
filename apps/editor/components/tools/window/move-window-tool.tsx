@@ -81,7 +81,9 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
 
     const getSnapGrid = () => {
       const { snapEnabled, snapSize } = useEditor.getState()
-      return snapEnabled ? snapSize : 0
+      const shiftOverride = useViewer.getState().snapShiftOverride
+      const effectiveSnap = shiftOverride ? !snapEnabled : snapEnabled
+      return effectiveSnap ? snapSize : 0
     }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {

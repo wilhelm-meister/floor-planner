@@ -1,6 +1,6 @@
 'use client'
 
-import { emitter, type GridEvent, type AnyNodeId, type WallNode, useScene } from '@pascal-app/core'
+import { emitter, type GridEvent, type AnyNodeId, type WallNode, sceneRegistry, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
@@ -10,9 +10,9 @@ import { sfxEmitter } from '@/lib/sfx-bus'
 
 type HandleTarget = 'start' | 'end' | null
 
-const HANDLE_Y = 0.05
+const HANDLE_Y_OFFSET = 0.05
 const HANDLE_RADIUS = 0.12
-const LINE_Y = 0.02
+const LINE_Y_OFFSET = 0.02
 const WALL_HEIGHT = 2.5
 
 interface WallEdgeHandlesProps {
@@ -145,6 +145,12 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
     return () => window.removeEventListener('pointerup', onPointerUp, true)
   }, [dragTarget, wallId])
 
+  // Get the level's world-space Y so handles appear at the correct height
+  const levelId = useViewer((s) => s.selection.levelId)
+  const levelY = levelId ? (sceneRegistry.nodes.get(levelId)?.position.y ?? 0) : 0
+  const HANDLE_Y = levelY + HANDLE_Y_OFFSET
+  const LINE_Y = levelY + LINE_Y_OFFSET
+
   if (!node) return null
 
   const startPos = liveStart ?? node.start
@@ -204,7 +210,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
       {isDragging && previewGeo && (
         <mesh
           geometry={previewGeo}
-          position={[startPos[0], 0, startPos[1]]}
+          position={[startPos[0], levelY, startPos[1]]}
           rotation={[0, -angle, 0]}
         >
           <meshBasicMaterial

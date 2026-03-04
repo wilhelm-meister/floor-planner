@@ -41,9 +41,21 @@ export const DoorTool: React.FC = () => {
   useEffect(() => {
     useScene.temporal.getState().pause()
 
+    // Shift key toggles snap override during door placement
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+
     const getSnapGrid = () => {
       const { snapEnabled, snapSize } = useEditor.getState()
-      return snapEnabled ? snapSize : 0
+      const shiftOverride = useViewer.getState().snapShiftOverride
+      const effectiveSnap = shiftOverride ? !snapEnabled : snapEnabled
+      return effectiveSnap ? snapSize : 0
     }
     const getLevelId = () => useViewer.getState().selection.levelId
     const getLevelYOffset = () => {
@@ -250,6 +262,9 @@ export const DoorTool: React.FC = () => {
       destroyDraft()
       hideCursor()
       useScene.temporal.getState().resume()
+      useViewer.getState().setSnapShiftOverride(false)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
       emitter.off('wall:enter', onWallEnter)
       emitter.off('wall:move', onWallMove)
       emitter.off('wall:click', onWallClick)
