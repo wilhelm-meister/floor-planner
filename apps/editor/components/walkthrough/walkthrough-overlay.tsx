@@ -56,28 +56,26 @@ export function WalkthroughOverlay() {
       </div>
 
       {/* WASD controls hint — bottom right */}
-      <div className="pointer-events-none fixed bottom-8 right-8 z-50">
-        <div className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 backdrop-blur-md">
-          <div className="mb-2 text-center text-[10px] font-medium uppercase tracking-wider text-white/50">Move</div>
-          <div className="flex flex-col items-center gap-1">
-            {/* W */}
-            <kbd className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-white/10 text-xs font-bold text-white/80">
+      <div className="pointer-events-none fixed bottom-6 right-6 z-50">
+        <div className="rounded-lg border border-white/10 bg-black/60 px-2.5 py-2 backdrop-blur-md">
+          <div className="mb-1 text-center text-[8px] font-medium uppercase tracking-wider text-white/50">Move</div>
+          <div className="flex flex-col items-center gap-0.5">
+            <kbd className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 text-[9px] font-bold text-white/80">
               W
             </kbd>
-            {/* A S D */}
-            <div className="flex gap-1">
-              <kbd className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-white/10 text-xs font-bold text-white/80">
+            <div className="flex gap-0.5">
+              <kbd className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 text-[9px] font-bold text-white/80">
                 A
               </kbd>
-              <kbd className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-white/10 text-xs font-bold text-white/80">
+              <kbd className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 text-[9px] font-bold text-white/80">
                 S
               </kbd>
-              <kbd className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-white/10 text-xs font-bold text-white/80">
+              <kbd className="flex h-5 w-5 items-center justify-center rounded border border-white/20 bg-white/10 text-[9px] font-bold text-white/80">
                 D
               </kbd>
             </div>
           </div>
-          <div className="mt-2 text-center text-[10px] text-white/40">Mouse to look</div>
+          <div className="mt-1 text-center text-[8px] text-white/40">Mouse to look</div>
         </div>
       </div>
     </>
