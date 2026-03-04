@@ -78,23 +78,30 @@ const modesByPhase: Record<Phase, Mode[]> = {
 
 export function ControlModes() {
   const mode = useEditor((state) => state.mode);
+  const walkthroughActive = useEditor((state) => state.walkthroughActive);
   const phase = useEditor((state) => state.phase);
   const setMode = useEditor((state) => state.setMode);
+
+  const isInWalkthrough = mode === 'walkthrough' || walkthroughActive;
 
   const availableModeIds = modesByPhase[phase];
   const availableModes = allModes.filter((m) =>
     availableModeIds.includes(m.id)
   );
 
-  const handleModeClick = (mode: Mode) => {
-    setMode(mode);
+  const handleModeClick = (clickedMode: Mode) => {
+    // During walkthrough, only the walkthrough button is clickable (to exit)
+    if (isInWalkthrough && clickedMode !== 'walkthrough') return;
+    setMode(clickedMode);
   };
 
   return (
     <div className="flex items-center gap-1">
       {availableModes.map((m) => {
         const Icon = m.icon;
-        const isActive = mode === m.id;
+        // During walkthrough, force walkthrough button as active
+        const isActive = isInWalkthrough ? m.id === 'walkthrough' : mode === m.id;
+        const isDisabled = isInWalkthrough && m.id !== 'walkthrough';
         const isImageMode = Boolean(m.imageSrc);
 
         return (
@@ -104,10 +111,11 @@ export function ControlModes() {
             shortcut={m.shortcut}
             className={cn(
               "text-muted-foreground",
-              !isImageMode && !isActive && m.color,
-              !isImageMode && isActive && m.activeColor,
-              isImageMode && isActive && "bg-white/10 hover:bg-white/10",
-              isImageMode && !isActive && "hover:bg-white/5"
+              isDisabled && "opacity-30 cursor-not-allowed",
+              !isDisabled && !isImageMode && !isActive && m.color,
+              !isDisabled && !isImageMode && isActive && m.activeColor,
+              !isDisabled && isImageMode && isActive && "bg-white/10 hover:bg-white/10",
+              !isDisabled && isImageMode && !isActive && "hover:bg-white/5"
             )}
             onClick={() => handleModeClick(m.id)}
             size="icon"
