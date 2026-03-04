@@ -9,7 +9,8 @@ import { useKeyboard } from '@/hooks/use-keyboard'
 import { initSFXBus } from '@/lib/sfx-bus'
 import useEditor from '@/store/use-editor'
 import { FeedbackDialog } from '../feedback-dialog'
-import { PascalRadio } from '../pascal-radio'
+import { AiRenderButton } from '../ai-render/ai-render-button'
+import { ScreenshotHelper } from '../ai-render/screenshot-helper'
 import { CeilingSystem } from '../systems/ceiling/ceiling-system'
 import { ZoneSystem } from '../systems/zone/zone-system'
 import { ToolManager } from '../tools/tool-manager'
@@ -108,7 +109,7 @@ export default function Editor({ projectId }: EditorProps) {
       {/* Top-right controls */}
       <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
         <div className="pointer-events-auto">
-          <PascalRadio />
+          <AiRenderButton />
         </div>
         <div className="pointer-events-auto">
           <FeedbackDialog projectId={projectId} />
@@ -131,6 +132,7 @@ export default function Editor({ projectId }: EditorProps) {
         <CustomCameraControls />
         <ThumbnailGenerator projectId={projectId} />
         <SiteEdgeLabels />
+        <ScreenshotHelper />
       </Viewer>
     </div>
   )
