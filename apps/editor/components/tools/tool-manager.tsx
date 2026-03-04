@@ -68,20 +68,24 @@ export const ToolManager: React.FC = () => {
   // Show slab boundary editor when in structure/select mode with a slab selected (but not editing a hole)
   const showSlabBoundaryEditor =
     phase === 'structure' && mode === 'select' && selectedSlabId !== undefined &&
+    !(nodes[selectedSlabId as AnyNodeId] as any)?.locked &&
     (!editingHole || editingHole.nodeId !== selectedSlabId)
 
   // Show slab hole editor when editing a hole on the selected slab
   const showSlabHoleEditor =
-    selectedSlabId !== undefined && editingHole !== null && editingHole.nodeId === selectedSlabId
+    selectedSlabId !== undefined && editingHole !== null && editingHole.nodeId === selectedSlabId &&
+    !(nodes[selectedSlabId as AnyNodeId] as any)?.locked
 
   // Show ceiling boundary editor when in structure/select mode with a ceiling selected (but not editing a hole)
   const showCeilingBoundaryEditor =
     phase === 'structure' && mode === 'select' && selectedCeilingId !== undefined &&
+    !(nodes[selectedCeilingId as AnyNodeId] as any)?.locked &&
     (!editingHole || editingHole.nodeId !== selectedCeilingId)
 
   // Show ceiling hole editor when editing a hole on the selected ceiling
   const showCeilingHoleEditor =
-    selectedCeilingId !== undefined && editingHole !== null && editingHole.nodeId === selectedCeilingId
+    selectedCeilingId !== undefined && editingHole !== null && editingHole.nodeId === selectedCeilingId &&
+    !(nodes[selectedCeilingId as AnyNodeId] as any)?.locked
 
   // Show zone boundary editor when in structure/select mode with a zone selected
   // Hide when editing a slab or ceiling to avoid overlapping handles
