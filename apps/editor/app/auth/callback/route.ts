@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[auth/callback] exchangeCodeForSession error:', error.message)
-      return NextResponse.redirect(new URL('/?error=auth_error', origin))
+      return NextResponse.redirect(new URL(`/?error=auth_error&detail=${encodeURIComponent(error.message)}`, origin))
     }
     supabaseUser = data.user
   } else if (tokenHash && type === 'email') {
