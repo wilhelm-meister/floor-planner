@@ -26,6 +26,7 @@ export const BaseNode = z.object({
   parentId: z.string().nullable().default(null),
   visible: z.boolean().optional().default(true),
   camera: CameraSchema.optional(),
+  locked: z.boolean().optional().default(false),
   metadata: z.json().optional().default({}),
 })
 

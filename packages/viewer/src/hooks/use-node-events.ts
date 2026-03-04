@@ -63,6 +63,7 @@ export function useNodeEvents<T extends NodeType>(node: NodeConfig[T]['node'], t
     onPointerDown: (e: ThreeEvent<PointerEvent>) => {
       if (useViewer.getState().cameraDragging) return
       if (e.button !== 0) return
+      if ((node as any).locked) return  // Locked: keine Interaktion
       emit('pointerdown', e)
     },
     onPointerUp: (e: ThreeEvent<PointerEvent>) => {

@@ -55,6 +55,7 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
     // Only handle left-click; right-click is for camera/perspective
     if (e.button !== 0) return
     if (useViewer.getState().cameraDragging) return
+    if (node.locked) return
 
     e.stopPropagation()
     gl.domElement.setPointerCapture(e.pointerId)

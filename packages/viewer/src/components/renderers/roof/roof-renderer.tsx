@@ -56,6 +56,7 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
   const onPointerDown = useCallback((e: any) => {
     if (e.button !== 0) return
     if (useViewer.getState().cameraDragging) return
+    if (node.locked) return
 
     e.stopPropagation()
     gl.domElement.setPointerCapture(e.pointerId)
