@@ -53,7 +53,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+          redirectTo: window.location.href,
         },
       })
       if (oauthError) {

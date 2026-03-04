@@ -16,7 +16,9 @@ const SUPABASE_ANON_KEY =
  */
 export function getSupabaseBrowserClient() {
   if (!browserClient) {
-    browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { flowType: 'implicit' },
+    })
   }
   return browserClient
 }
