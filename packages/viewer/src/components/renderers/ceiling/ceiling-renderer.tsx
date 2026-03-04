@@ -1,8 +1,10 @@
 import { type CeilingNode, useRegistry } from '@pascal-app/core'
-import { useRef } from 'react'
+import { useThree } from '@react-three/fiber'
+import { useCallback, useRef } from 'react'
 import { float, mix, positionWorld, smoothstep } from 'three/tsl'
 import { BackSide, FrontSide, type Mesh, MeshBasicNodeMaterial } from 'three/webgpu'
 import { useNodeEvents } from '../../../hooks/use-node-events'
+import useViewer from '../../../store/use-viewer'
 import { NodeRenderer } from '../node-renderer'
 
 // TSL material that renders differently based on face direction:
@@ -47,15 +49,30 @@ ceilingTopMaterial.opacityNode = gridOpacity
 
 export const CeilingRenderer = ({ node }: { node: CeilingNode }) => {
   const ref = useRef<Mesh>(null!)
+  const { gl } = useThree()
 
   useRegistry(node.id, 'ceiling', ref)
   const handlers = useNodeEvents(node, 'ceiling')
+
+  const onPointerDown = useCallback((e: any) => {
+    if (e.button !== 0) return
+    if (useViewer.getState().cameraDragging) return
+    e.stopPropagation()
+    gl.domElement.setPointerCapture(e.pointerId)
+    handlers.onPointerDown?.(e)
+  }, [gl, handlers])
+
+  const onPointerUp = useCallback((e: any) => {
+    if (e.button !== 0) return
+    gl.domElement.releasePointerCapture(e.pointerId)
+    handlers.onPointerUp?.(e)
+  }, [gl, handlers])
 
   return (
     <mesh ref={ref} material={ceilingBottomMaterial}>
       {/* CeilingSystem will replace this geometry in the next frame */}
       <boxGeometry args={[0, 0, 0]} />
-      <mesh name="ceiling-grid" material={ceilingTopMaterial} {...handlers} visible={false} scale={0}>
+      <mesh name="ceiling-grid" material={ceilingTopMaterial} {...handlers} onPointerDown={onPointerDown} onPointerUp={onPointerUp} visible={false} scale={0}>
         <boxGeometry args={[0, 0, 0]} />
       </mesh>
       {node.children.map((childId) => (
