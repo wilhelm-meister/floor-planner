@@ -26,20 +26,32 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.clone().json().catch(() => ({}))
-    console.log('[AUTH POST START]', req.url, JSON.stringify(body))
     
-    // Log what's happening inside the handler
-    console.log('[AUTH] Calling handler.POST...')
+    // Check if Google credentials are actually being read
+    const { env } = await import('@/env.mjs')
+    
+    // Call handler
     const res = await handler.POST(req)
-    console.log('[AUTH] Got response:', res.status, res.headers.get('content-type'))
     
+    // If error, try to get error details
     if (res.status >= 400) {
       const resBody = await res.clone().text()
-      console.error('[AUTH POST ERROR]', res.status, resBody || '(empty)')
+      return NextResponse.json({
+        debug: true,
+        status: res.status,
+        envGoogleClientId: !!env.GOOGLE_CLIENT_ID,
+        envGoogleClientSecret: !!env.GOOGLE_CLIENT_SECRET,
+        betterAuthUrl: env.BETTER_AUTH_URL,
+        responseBody: resBody || '(empty)'
+      }, { status: res.status })
     }
+    
     return res
   } catch (error) {
-    console.error('[AUTH POST THROW]', error)
-    return NextResponse.json({ error: String(error), stack: (error as Error).stack }, { status: 500 })
+    return NextResponse.json({ 
+      debug: true,
+      error: String(error), 
+      stack: (error as Error).stack 
+    }, { status: 500 })
   }
 }
