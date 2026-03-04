@@ -16,11 +16,13 @@ export default function EditorPage() {
   const [showSignIn, setShowSignIn] = useState(false)
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && projectId) {
+      useProjectStore.getState().setActiveProject(projectId)
+    } else if (isAuthenticated) {
       useProjectStore.setState({ isLoading: false, isSceneLoading: false })
     }
     setMounted(true)
-  }, [isAuthenticated])
+  }, [isAuthenticated, projectId])
 
   // Show sign-in dialog when auth resolves to unauthenticated
   useEffect(() => {
