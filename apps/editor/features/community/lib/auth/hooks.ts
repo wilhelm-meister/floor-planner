@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/auth-client'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export interface AuthUser {
   id: string
@@ -20,20 +21,30 @@ interface AuthState {
 }
 
 /**
- * Fetches the auth_users profile from /api/auth/me.
+ * Converts a Supabase Auth user to our AuthUser format.
+ * Uses Google user_metadata for name/image as fallback.
  */
-async function fetchProfile(): Promise<AuthUser | null> {
-  try {
-    const res = await fetch('/api/auth/me', { cache: 'no-store' })
-    if (!res.ok) return null
-    return await res.json()
-  } catch {
-    return null
+function supabaseUserToAuthUser(user: SupabaseUser): AuthUser {
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    name:
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split('@')[0] ||
+      'User',
+    image: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+    username: null,
+    role: 'user',
   }
 }
 
 /**
  * Hook to access authentication state using Supabase Auth.
+ *
+ * Auth state comes DIRECTLY from the Supabase browser client session.
+ * Profile enrichment from /api/auth/me happens in the background
+ * but does NOT block the isAuthenticated state.
  */
 export function useAuth() {
   const supabase = getSupabaseBrowserClient()
@@ -43,37 +54,48 @@ export function useAuth() {
     isLoading: true,
   })
 
-  const loadProfile = useCallback(
-    async (hasSession: boolean) => {
-      if (!hasSession) {
-        setState({ user: null, isAuthenticated: false, isLoading: false })
-        return
-      }
-      const profile = await fetchProfile()
-      setState({
-        user: profile,
-        isAuthenticated: !!profile,
-        isLoading: false,
+  const handleSession = useCallback((user: SupabaseUser | null) => {
+    if (!user) {
+      setState({ user: null, isAuthenticated: false, isLoading: false })
+      return
+    }
+
+    // Immediately mark as authenticated using Supabase session data
+    const authUser = supabaseUserToAuthUser(user)
+    setState({ user: authUser, isAuthenticated: true, isLoading: false })
+
+    // Enrich with profile data in background (username, etc.)
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((profile) => {
+        if (profile?.id) {
+          setState((prev) => ({
+            ...prev,
+            user: { ...authUser, ...profile },
+          }))
+        }
       })
-    },
-    [],
-  )
+      .catch(() => {
+        // Profile enrichment failed — that's OK, basic auth still works
+      })
+  }, [])
 
   useEffect(() => {
     // Initial session check
-    supabase.auth.getSession().then((result: { data: { session: unknown } }) => {
-      loadProfile(!!result.data.session)
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: { user?: SupabaseUser } | null } }) => {
+      handleSession(session?.user ?? null)
     })
 
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes (fires on login, logout, token refresh)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event: string, session: unknown) => {
-        loadProfile(!!session)
+        const user = (session as { user?: SupabaseUser } | null)?.user ?? null
+        handleSession(user)
       },
     )
 
     return () => authListener.subscription.unsubscribe()
-  }, [supabase, loadProfile])
+  }, [supabase, handleSession])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
@@ -85,7 +107,6 @@ export function useAuth() {
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
     signOut,
-    // signIn is a no-op here; use the SignInDialog or direct supabase calls
     signIn: supabase.auth,
   }
 }
