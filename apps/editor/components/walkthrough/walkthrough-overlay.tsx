@@ -76,6 +76,13 @@ export function WalkthroughOverlay() {
             </div>
           </div>
           <div className="mt-1 text-center text-[8px] text-white/40">Mouse to look</div>
+          {/* AI Render shortcut */}
+          <div className="mt-2 flex items-center justify-center gap-1 border-t border-white/10 pt-2">
+            <kbd className="flex h-5 w-5 items-center justify-center rounded border border-indigo-400/30 bg-indigo-500/20 text-[9px] font-bold text-indigo-300">
+              R
+            </kbd>
+            <span className="text-[8px] text-indigo-300/70">AI Render</span>
+          </div>
         </div>
       </div>
     </>

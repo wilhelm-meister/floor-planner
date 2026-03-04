@@ -6,6 +6,7 @@ import { useThree, useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import useEditor from '@/store/use-editor'
+import { useAiRenderStore } from '../ai-render/ai-render-store'
 
 const EYE_HEIGHT = 1.7
 const MOVE_SPEED = 3 // meters per second
@@ -34,26 +35,57 @@ export function WalkthroughControls() {
   // Pending position — applied AFTER PointerLockControls mounts
   const pendingPosRef = useRef<[number, number, number] | null>(null)
 
+  // Track whether we paused walkthrough for AI render (vs ESC exit)
+  const pausedForRenderRef = useRef(false)
+
   // ─── Apply camera position after walkthrough activates ────────────────────
-  // This runs after PointerLockControls has mounted and CameraControls unmounted
   useEffect(() => {
     if (!walkthroughActive || !pendingPosRef.current) return
 
     const pos = pendingPosRef.current
     pendingPosRef.current = null
 
-    // Use requestAnimationFrame to ensure it runs after R3F has processed the mount
     requestAnimationFrame(() => {
       camera.position.set(pos[0], pos[1], pos[2])
       camera.lookAt(pos[0] + 1, pos[1], pos[2])
       camera.updateMatrixWorld()
 
-      // Now lock the pointer
       setTimeout(() => {
         plRef.current?.lock()
       }, 50)
     })
   }, [walkthroughActive, camera])
+
+  // ─── Re-lock pointer when AI Render modal closes ──────────────────────────
+  const aiRenderOpen = useAiRenderStore((s) => s.isOpen)
+  useEffect(() => {
+    // Modal just closed and we were paused for render → re-lock
+    if (!aiRenderOpen && pausedForRenderRef.current && walkthroughActive) {
+      pausedForRenderRef.current = false
+      setTimeout(() => {
+        plRef.current?.lock()
+      }, 100)
+    }
+  }, [aiRenderOpen, walkthroughActive])
+
+  // ─── R key: open AI Render from walkthrough ───────────────────────────────
+  useEffect(() => {
+    if (!walkthroughActive) return
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'KeyR' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        // Pause walkthrough: unlock pointer but keep camera in place
+        pausedForRenderRef.current = true
+        document.exitPointerLock()
+        // Open AI Render modal
+        useAiRenderStore.getState().open()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [walkthroughActive])
 
   // ─── Placement mode: mouse hover preview ──────────────────────────────────
   const onGroundMove = useCallback(
@@ -90,11 +122,7 @@ export function WalkthroughControls() {
       setCameraMode('perspective')
       setWallMode('up')
 
-      // Store the desired position — will be applied in the useEffect above
-      // AFTER PointerLockControls mounts and CameraControls unmounts
       pendingPosRef.current = eyePos
-
-      // Store position and activate (triggers re-render → CameraControls unmounts → PLC mounts)
       setWalkthroughPosition(eyePos)
       setWalkthroughActive(true)
     },
@@ -114,6 +142,9 @@ export function WalkthroughControls() {
     const onLockChange = () => {
       const locked = document.pointerLockElement !== null
       if (!locked) {
+        // If we paused for AI render, DON'T exit walkthrough
+        if (pausedForRenderRef.current) return
+
         const prevWallMode = useEditor.getState().previousWallMode
 
         setWalkthroughActive(false)
@@ -183,7 +214,6 @@ export function WalkthroughControls() {
     if (keys.a) camera.position.addScaledVector(_right, -speed)
     if (keys.d) camera.position.addScaledVector(_right, speed)
 
-    // Keep eye height constant
     camera.position.y = EYE_HEIGHT
   })
 
@@ -192,12 +222,10 @@ export function WalkthroughControls() {
 
   return (
     <>
-      {/* PointerLock controls — only mounted when walkthrough is active */}
       {walkthroughActive && (
         <PointerLockControls ref={plRef} />
       )}
 
-      {/* Invisible ground plane for raycasting — only in placement mode */}
       {isPlacement && (
         <mesh
           position={[0, 0, 0]}
@@ -212,7 +240,6 @@ export function WalkthroughControls() {
         </mesh>
       )}
 
-      {/* Placement preview — flat circle on ground */}
       {isPlacement && (
         <mesh ref={previewMeshRef} visible={false} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
           <circleGeometry args={[0.4, 32]} />
