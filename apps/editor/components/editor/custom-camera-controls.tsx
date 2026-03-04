@@ -5,10 +5,11 @@ import { useViewer } from '@pascal-app/viewer'
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
+import useEditor from '@/store/use-editor'
 
 const currentTarget = new Vector3()
 
-export const CustomCameraControls = () => {
+const CameraControlsInner = () => {
   const controls = useRef<CameraControlsImpl>(null!)
   const currentLevelId = useViewer((state) => state.selection.levelId)
   const firstLoad = useRef(true)
@@ -264,4 +265,10 @@ export const CustomCameraControls = () => {
       restThreshold={0.01}
     />
   )
+}
+
+export const CustomCameraControls = () => {
+  const walkthroughActive = useEditor((state) => state.walkthroughActive)
+  if (walkthroughActive) return null
+  return <CameraControlsInner />
 }

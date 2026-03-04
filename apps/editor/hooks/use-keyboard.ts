@@ -15,6 +15,19 @@ export const useKeyboard = () => {
       if (e.key === 'Escape') {
         e.preventDefault()
 
+        // Exit walkthrough mode if active
+        if (useEditor.getState().walkthroughActive || useEditor.getState().mode === 'walkthrough') {
+          useEditor.getState().setWalkthroughActive(false)
+          useEditor.getState().setWalkthroughPosition(null)
+          const prevWallMode = useEditor.getState().previousWallMode
+          if (prevWallMode) {
+            useViewer.getState().setWallMode(prevWallMode)
+            useEditor.getState().setPreviousWallMode(null)
+          }
+          useEditor.getState().setMode('select')
+          return
+        }
+
         // Cancel any active tool action (wall preview, item draft, etc.)
         emitter.emit('tool:cancel')
 
@@ -54,6 +67,12 @@ export const useKeyboard = () => {
       if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
         useEditor.getState().setMode('select')
+      } else if (e.key === 't' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault()
+        const phase = useEditor.getState().phase
+        if (phase === 'structure' || phase === 'furnish') {
+          useEditor.getState().setMode('walkthrough')
+        }
       } else if (e.key === 'b' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
         useEditor.getState().setMode('build')

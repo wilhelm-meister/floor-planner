@@ -15,7 +15,7 @@ import { create } from 'zustand'
 
 export type Phase = 'site' | 'structure' | 'furnish'
 
-export type Mode = 'select' | 'edit' | 'delete' | 'build'
+export type Mode = 'select' | 'edit' | 'delete' | 'build' | 'walkthrough'
 
 // Structure mode tools (building elements)
 export type StructureTool =
@@ -83,6 +83,13 @@ type EditorState = {
   setSnapEnabled: (enabled: boolean) => void
   setSnapSize: (size: 0.5 | 0.25) => void
   setSnapShiftOverride: (v: boolean) => void
+  // Walkthrough mode
+  walkthroughPosition: [number, number, number] | null
+  setWalkthroughPosition: (pos: [number, number, number] | null) => void
+  walkthroughActive: boolean
+  setWalkthroughActive: (active: boolean) => void
+  previousWallMode: 'up' | 'cutaway' | 'down' | null
+  setPreviousWallMode: (mode: 'up' | 'cutaway' | 'down' | null) => void
 }
 
 const useEditor = create<EditorState>()((set, get) => ({
@@ -213,6 +220,12 @@ const useEditor = create<EditorState>()((set, get) => ({
   setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
   setSnapSize: (size) => set({ snapSize: size }),
   setSnapShiftOverride: (v) => set({ snapShiftOverride: v }),
+  walkthroughPosition: null,
+  setWalkthroughPosition: (pos) => set({ walkthroughPosition: pos }),
+  walkthroughActive: false,
+  setWalkthroughActive: (active) => set({ walkthroughActive: active }),
+  previousWallMode: null,
+  setPreviousWallMode: (mode) => set({ previousWallMode: mode }),
 }))
 
 export default useEditor

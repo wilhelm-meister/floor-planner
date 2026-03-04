@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ActionButton } from "./action-button";
-import { Pencil, Trash2, type LucideIcon } from "lucide-react";
+import { Pencil, PersonStanding, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import useEditor, { Mode, Phase } from "@/store/use-editor";
@@ -44,12 +44,12 @@ const allModes: ModeConfig[] = [
     activeColor: "bg-green-500/20 text-green-400",
   },
   {
-    id: "delete",
-    icon: Trash2,
-    label: "Delete",
-    shortcut: "D",
-    color: "hover:bg-red-500/20 hover:text-red-400",
-    activeColor: "bg-red-500/20 text-red-400",
+    id: "walkthrough",
+    icon: PersonStanding,
+    label: "Walkthrough",
+    shortcut: "T",
+    color: "hover:bg-violet-500/20 hover:text-violet-400",
+    activeColor: "bg-violet-500/20 text-violet-400",
   },
   // {
   //   id: 'painting',
@@ -72,8 +72,8 @@ const allModes: ModeConfig[] = [
 // Define which modes are available in each editor mode
 const modesByPhase: Record<Phase, Mode[]> = {
   site: ["select", "edit"],
-  structure: ["select", "delete", "build"],
-  furnish: ["select", "delete", "build"],
+  structure: ["select", "build", "walkthrough"],
+  furnish: ["select", "build", "walkthrough"],
 };
 
 export function ControlModes() {

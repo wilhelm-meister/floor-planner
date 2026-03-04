@@ -27,6 +27,8 @@ import { Grid } from './grid'
 import { SelectionManager } from './selection-manager'
 import { SiteEdgeLabels } from './site-edge-labels'
 import { ThumbnailGenerator } from './thumbnail-generator'
+import { WalkthroughControls } from '../walkthrough/walkthrough-controls'
+import { WalkthroughOverlay } from '../walkthrough/walkthrough-overlay'
 
 
 // Load default scene initially (will be replaced when project loads)
@@ -106,6 +108,9 @@ export default function Editor({ projectId }: EditorProps) {
       <PanelManager />
       <HelperManager />
 
+      {/* Walkthrough overlay (exit button + crosshair) */}
+      <WalkthroughOverlay />
+
       {/* Top-right controls */}
       <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
         <div className="pointer-events-auto">
@@ -130,6 +135,7 @@ export default function Editor({ projectId }: EditorProps) {
         <Grid cellColor="#aaa" sectionColor="#ccc" fadeDistance={500} />
         <ToolManager />
         <CustomCameraControls />
+        <WalkthroughControls />
         <ThumbnailGenerator projectId={projectId} />
         <SiteEdgeLabels />
         <ScreenshotHelper />
