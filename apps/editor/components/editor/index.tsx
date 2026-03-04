@@ -30,6 +30,7 @@ import { ThumbnailGenerator } from './thumbnail-generator'
 import { WalkthroughControls } from '../walkthrough/walkthrough-controls'
 import { WalkthroughCursor } from '../walkthrough/walkthrough-cursor'
 import { WalkthroughOverlay } from '../walkthrough/walkthrough-overlay'
+import { LockCursor } from '../ui/lock-cursor'
 
 
 // Load default scene initially (will be replaced when project loads)
@@ -112,6 +113,7 @@ export default function Editor({ projectId }: EditorProps) {
       {/* Walkthrough overlay (exit button + crosshair) */}
       <WalkthroughOverlay />
       <WalkthroughCursor />
+      <LockCursor />
 
       {/* Top-right controls */}
       <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
