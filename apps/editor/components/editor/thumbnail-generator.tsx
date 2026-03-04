@@ -52,8 +52,20 @@ export const ThumbnailGenerator = ({ projectId: propProjectId }: ThumbnailGenera
       thumbnailCamera.aspect = width / height
       thumbnailCamera.updateProjectionMatrix()
 
+      // Save current clear color
+      const originalClearColor = new THREE.Color()
+      const originalClearAlpha = gl.getClearAlpha()
+      gl.getClearColor(originalClearColor)
+
+      // Set warm neutral background for thumbnail
+      gl.setClearColor(new THREE.Color('#e8e4de'), 1)
+      gl.clear()
+
       // Render with thumbnail camera — main canvas is never resized
       gl.render(scene, thumbnailCamera)
+
+      // Restore original clear color
+      gl.setClearColor(originalClearColor, originalClearAlpha)
 
       // Center-crop the canvas to the thumbnail aspect ratio, then scale — avoids deformation
       const srcAspect = width / height

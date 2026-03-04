@@ -109,6 +109,7 @@ export function ProjectGrid({
                     src={project.thumbnail_url}
                     alt={project.name}
                     className="w-full h-full object-cover"
+                    style={{ filter: 'contrast(1.2) brightness(0.9) saturate(1.1)' }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
