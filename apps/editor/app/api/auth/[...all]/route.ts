@@ -29,6 +29,12 @@ export async function POST(req: NextRequest) {
     
     // Check if Google credentials are actually being read
     const { env } = await import('@/env.mjs')
+    const googleId = env.GOOGLE_CLIENT_ID || ''
+    const googleSecret = env.GOOGLE_CLIENT_SECRET || ''
+    
+    // Log for debugging
+    console.log('[AUTH DEBUG] Google ID:', googleId.substring(0,10), 'len:', googleId.length)
+    console.log('[AUTH DEBUG] Google Secret:', googleSecret.substring(0,10), 'len:', googleSecret.length)
     
     // Call handler
     const res = await handler.POST(req)
