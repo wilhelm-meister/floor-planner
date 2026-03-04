@@ -54,16 +54,25 @@ function findConnectedWalls(startId: string, allWalls: WallNode[]): WallNode[] {
 }
 
 function wallsBBox(walls: WallNode[]) {
+  if (!walls.length) {
+    return { centerX: 0, centerZ: 0, length: 1, width: 1, wallHeight: DEFAULT_WALL_HEIGHT, wallThickness: 0.1 }
+  }
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
   let wallHeight = DEFAULT_WALL_HEIGHT
   let wallThickness = 0.1
   for (const w of walls) {
+    const coords = [w.start[0], w.start[1], w.end[0], w.end[1]]
+    if (coords.some((c) => !Number.isFinite(c))) continue
     minX = Math.min(minX, w.start[0], w.end[0])
     maxX = Math.max(maxX, w.start[0], w.end[0])
     minZ = Math.min(minZ, w.start[1], w.end[1])
     maxZ = Math.max(maxZ, w.start[1], w.end[1])
     if (w.height) wallHeight = w.height
     if (w.thickness) wallThickness = w.thickness
+  }
+  // All walls had invalid coords
+  if (!Number.isFinite(minX)) {
+    return { centerX: 0, centerZ: 0, length: 1, width: 1, wallHeight, wallThickness }
   }
   minX -= PADDING; maxX += PADDING
   minZ -= PADDING; maxZ += PADDING

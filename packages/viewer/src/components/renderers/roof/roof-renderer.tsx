@@ -1,11 +1,14 @@
 import { emitter, type AnyNodeId, type RoofNode, useRegistry, useScene } from '@pascal-app/core'
 import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
-import { Plane, Raycaster, Vector2, Vector3, type Mesh } from 'three'
+import { Color, Plane, Raycaster, Vector2, Vector3, type Mesh } from 'three'
 import { applySnap } from '../../../lib/snap'
 import { captureGroupState, applyGroupDelta, clearGroupState } from '../../../lib/group-move'
 import useViewer from '../../../store/use-viewer'
 import { useNodeEvents } from '../../../hooks/use-node-events'
+
+const SELECTED_EMISSIVE = new Color(0x4488ff)
+const DEFAULT_EMISSIVE = new Color(0x000000)
 
 const DRAG_PLANE = new Plane(new Vector3(0, 1, 0), 0)
 const DRAG_THRESHOLD = 4
@@ -15,6 +18,7 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
   useRegistry(node.id, 'roof', ref)
   const handlers = useNodeEvents(node, 'roof')
   const { camera, gl } = useThree()
+  const isSelected = useViewer((s) => s.selection.selectedIds.includes(node.id))
 
   const dragState = useRef<{
     active: boolean
@@ -152,7 +156,11 @@ export const RoofRenderer = ({ node }: { node: RoofNode }) => {
     >
       {/* RoofSystem will replace this geometry in the next frame */}
       <boxGeometry args={[0, 0, 0]} />
-      <meshStandardMaterial color="white" />
+      <meshStandardMaterial
+        color="white"
+        emissive={isSelected ? SELECTED_EMISSIVE : DEFAULT_EMISSIVE}
+        emissiveIntensity={isSelected ? 0.3 : 0}
+      />
     </mesh>
   )
 }
