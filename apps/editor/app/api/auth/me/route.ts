@@ -11,13 +11,16 @@ export const dynamic = 'force-dynamic'
  */
 function getUserFromCookies(request: NextRequest): { id: string; email: string; name?: string; image?: string | null } | null {
   try {
-    // Reassemble chunked cookies
+    // Reassemble chunked cookies — @supabase/ssr stores as base64-{base64_json}
     const chunk0 = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.0')?.value ?? ''
     const chunk1 = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.1')?.value ?? ''
-    const raw = chunk0 + chunk1
-    if (!raw) return null
+    if (!chunk0) return null
 
-    const session = JSON.parse(decodeURIComponent(raw))
+    // Strip 'base64-' prefix, concatenate, decode
+    const b64part0 = chunk0.startsWith('base64-') ? chunk0.slice(7) : chunk0
+    const b64part1 = chunk1.startsWith('base64-') ? chunk1.slice(7) : chunk1
+    const sessionStr = Buffer.from(b64part0 + b64part1, 'base64').toString('utf-8')
+    const session = JSON.parse(sessionStr)
     const accessToken: string = session?.access_token
     if (!accessToken) return null
 
