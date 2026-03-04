@@ -30,6 +30,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const node = useScene((s) => s.nodes[wallId as AnyNodeId] as WallNode | undefined)
 
   const [dragTarget, setDragTarget] = useState<HandleTarget>(null)
+  // Locked walls: no edge handles
   const [hoveredHandle, setHoveredHandle] = useState<HandleTarget>(null)
   // Live drag positions (only for visual preview — no store writes during drag)
   const [liveStart, setLiveStart] = useState<[number, number] | null>(null)
@@ -152,6 +153,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
   const LINE_Y = levelY + LINE_Y_OFFSET
 
   if (!node) return null
+  if ((node as any).locked) return null
 
   const startPos = liveStart ?? node.start
   const endPos = liveEnd ?? node.end
