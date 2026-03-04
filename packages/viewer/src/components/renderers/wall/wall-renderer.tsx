@@ -140,15 +140,21 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
 
   // Mesh onPointerUp: still needed for click→select (R3F ThreeEvent required by useNodeEvents)
   const onPointerUp = useCallback((e: any) => {
-    if (!dragState.current) return
+    // Locked nodes: dragState was never set, but still need click→select
+    if (!dragState.current) {
+      if ((node as any).locked) {
+        gl.domElement.releasePointerCapture(e.pointerId)
+        handlers.onPointerUp?.(e)
+      }
+      return
+    }
     gl.domElement.releasePointerCapture(e.pointerId)
     document.body.style.cursor = ''
     if (!dragState.current.active) {
-      // Was a click, not a drag → trigger selection
       handlers.onPointerUp?.(e)
     }
     dragState.current = null
-  }, [gl, handlers])
+  }, [gl, handlers, node])
 
   return (
     <mesh ref={ref} castShadow receiveShadow visible={node.visible}>
