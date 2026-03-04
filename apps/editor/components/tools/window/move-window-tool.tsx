@@ -51,6 +51,16 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
   useEffect(() => {
     useScene.temporal.getState().pause()
 
+    // Shift key toggles snap override during window move
+    const onShiftDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
+    }
+    const onShiftUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(false)
+    }
+    window.addEventListener('keydown', onShiftDown)
+    window.addEventListener('keyup', onShiftUp)
+
     const meta = (typeof movingWindowNode.metadata === 'object' && movingWindowNode.metadata !== null)
       ? movingWindowNode.metadata as Record<string, unknown>
       : {}
@@ -355,6 +365,9 @@ export const MoveWindowTool: React.FC<{ node: WindowNode }> = ({ node: movingWin
         }
       }
       useScene.temporal.getState().resume()
+      useViewer.getState().setSnapShiftOverride(false)
+      window.removeEventListener('keydown', onShiftDown)
+      window.removeEventListener('keyup', onShiftUp)
       emitter.off('wall:enter', onWallEnter)
       emitter.off('wall:move', onWallMove)
       emitter.off('wall:click', onWallClick)

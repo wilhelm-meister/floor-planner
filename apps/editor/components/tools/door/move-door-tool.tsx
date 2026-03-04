@@ -44,6 +44,16 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
       : {}
     const isNew = !!meta.isNew
 
+    // Shift key toggles snap override during door move
+    const onShiftDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(true)
+    }
+    const onShiftUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') useViewer.getState().setSnapShiftOverride(false)
+    }
+    window.addEventListener('keydown', onShiftDown)
+    window.addEventListener('keyup', onShiftUp)
+
     const original = {
       position: [...movingDoorNode.position] as [number, number, number],
       rotation: [...movingDoorNode.rotation] as [number, number, number],
@@ -333,6 +343,9 @@ export const MoveDoorTool: React.FC<{ node: DoorNode }> = ({ node: movingDoorNod
         }
       }
       useScene.temporal.getState().resume()
+      useViewer.getState().setSnapShiftOverride(false)
+      window.removeEventListener('keydown', onShiftDown)
+      window.removeEventListener('keyup', onShiftUp)
       emitter.off('wall:enter', onWallEnter)
       emitter.off('wall:move', onWallMove)
       emitter.off('wall:click', onWallClick)
