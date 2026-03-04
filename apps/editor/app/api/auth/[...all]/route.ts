@@ -26,21 +26,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.clone().json().catch(() => ({}))
-    console.log('[AUTH POST]', req.url, JSON.stringify(body))
+    console.log('[AUTH POST START]', req.url, JSON.stringify(body))
+    
+    // Log what's happening inside the handler
+    console.log('[AUTH] Calling handler.POST...')
     const res = await handler.POST(req)
+    console.log('[AUTH] Got response:', res.status, res.headers.get('content-type'))
+    
     if (res.status >= 400) {
       const resBody = await res.clone().text()
-      console.error('[AUTH POST ERROR]', res.status, resBody)
-      // Return the error body so we can see it
-      if (!resBody) {
-        return NextResponse.json({ 
-          debug: true,
-          status: res.status, 
-          url: req.url,
-          body: body,
-          headers: Object.fromEntries(res.headers.entries())
-        }, { status: res.status })
-      }
+      console.error('[AUTH POST ERROR]', res.status, resBody || '(empty)')
     }
     return res
   } catch (error) {
