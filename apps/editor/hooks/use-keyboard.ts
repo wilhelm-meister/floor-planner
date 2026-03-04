@@ -24,7 +24,7 @@ export const useKeyboard = () => {
             useViewer.getState().setWallMode(prevWallMode)
             useEditor.getState().setPreviousWallMode(null)
           }
-          useEditor.getState().setMode('select')
+          useEditor.getState().setMode('build')
           return
         }
 

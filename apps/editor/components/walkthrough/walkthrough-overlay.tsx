@@ -30,7 +30,7 @@ export function WalkthroughOverlay() {
       setWallMode(previousWallMode)
       setPreviousWallMode(null)
     }
-    useEditor.getState().setMode('select')
+    useEditor.getState().setMode('build')
   }
 
   return (

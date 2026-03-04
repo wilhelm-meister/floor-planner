@@ -153,7 +153,7 @@ export function WalkthroughControls() {
           setWallMode(prevWallMode)
           setPreviousWallMode(null)
         }
-        useEditor.getState().setMode('select')
+        useEditor.getState().setMode('build')
 
         // Restore camera position
         if (savedCameraRef.current) {
