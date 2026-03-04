@@ -28,6 +28,7 @@ import { SelectionManager } from './selection-manager'
 import { SiteEdgeLabels } from './site-edge-labels'
 import { ThumbnailGenerator } from './thumbnail-generator'
 import { WalkthroughControls } from '../walkthrough/walkthrough-controls'
+import { WalkthroughCursor } from '../walkthrough/walkthrough-cursor'
 import { WalkthroughOverlay } from '../walkthrough/walkthrough-overlay'
 
 
@@ -110,6 +111,7 @@ export default function Editor({ projectId }: EditorProps) {
 
       {/* Walkthrough overlay (exit button + crosshair) */}
       <WalkthroughOverlay />
+      <WalkthroughCursor />
 
       {/* Top-right controls */}
       <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
