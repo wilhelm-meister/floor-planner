@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
  * Reassembles chunked @supabase/ssr session cookies and extracts user info
  * directly from the JWT — bypasses createServerClient/getUser() entirely.
  */
-function getUserFromCookies(request: NextRequest): { id: string; email: string; name?: string; image?: string } | null {
+function getUserFromCookies(request: NextRequest): { id: string; email: string; name?: string; image?: string | null } | null {
   try {
     // Reassemble chunked cookies
     const chunk0 = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.0')?.value ?? ''
@@ -33,9 +33,9 @@ function getUserFromCookies(request: NextRequest): { id: string; email: string; 
     // Extract user metadata from session user object (has name/avatar from Google)
     const userMeta = session?.user?.user_metadata ?? {}
     const name: string = userMeta.full_name || userMeta.name || email.split('@')[0] || 'User'
-    const image: string | undefined = userMeta.avatar_url || userMeta.picture || undefined
+    const image: string | null = userMeta.avatar_url || userMeta.picture || null
 
-    return { id: userId, email, name, image }
+    return { id: userId, email, name, image: image as string | null }
   } catch (err) {
     console.error('[/api/auth/me] cookie parse error:', err)
     return null
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       .values({
         id: `user_${nanoid()}`,
         email: sessionUser.email,
-        name: sessionUser.name ?? sessionUser.email.split('@')[0],
+        name: (sessionUser.name ?? sessionUser.email.split('@')[0]) as string,
         image: sessionUser.image ?? null,
         emailVerified: true,
       })
