@@ -18,9 +18,9 @@ export const env = createEnv({
     POSTGRES_URL: z.string().min(1),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
-    // Auth
-    BETTER_AUTH_SECRET: z.string().min(1),
-    BETTER_AUTH_URL: z.string().min(1),
+    // Auth (better-auth legacy — no longer used, kept optional to avoid env validation failures)
+    BETTER_AUTH_SECRET: z.string().optional(),
+    BETTER_AUTH_URL: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
 
@@ -33,7 +33,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().min(1),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   },
 
   /**

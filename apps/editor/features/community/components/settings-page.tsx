@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { authClient } from '../lib/auth/client'
+import { getSupabaseBrowserClient } from '../lib/auth/client'
 import { updateUsername, updateProfile, uploadAvatar, updateEmailNotifications } from '../lib/auth/actions'
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -111,9 +111,12 @@ export function SettingsPage({
   const handleConnectGoogle = async () => {
     setIsConnectingGoogle(true)
     try {
-      await authClient.signIn.social({
+      const supabase = getSupabaseBrowserClient()
+      await supabase.auth.signInWithOAuth({
         provider: 'google',
-        callbackURL: '/settings',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/settings`,
+        },
       })
     } catch {
       setIsConnectingGoogle(false)

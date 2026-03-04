@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Mail, X } from 'lucide-react'
 import { useState } from 'react'
-import { authClient } from '../lib/auth/client'
+import { getSupabaseBrowserClient } from '@/lib/supabase/auth-client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/primitives/dialog'
 
 interface SignInDialogProps {
@@ -35,13 +35,9 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 /**
- * SignInDialog - Authentication dialog with Google OAuth and magic link
+ * SignInDialog — Authentication dialog backed by Supabase Auth.
+ * Supports Google OAuth (redirect flow) and Magic Link (OTP email).
  */
-const LOGIN_METHOD_LABELS: Record<string, string> = {
-  google: 'Google',
-  'magic-link': 'email link',
-}
-
 export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -49,17 +45,22 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const lastMethod = authClient.getLastUsedLoginMethod?.()
-  const lastMethodLabel = lastMethod ? LOGIN_METHOD_LABELS[lastMethod] ?? lastMethod : null
-
   const handleGoogleSignIn = async () => {
     setError(null)
     setIsGoogleLoading(true)
     try {
-      await authClient.signIn.social({
+      const supabase = getSupabaseBrowserClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        callbackURL: window.location.origin,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+        },
       })
+      if (oauthError) {
+        setError(oauthError.message || 'Failed to sign in with Google')
+        setIsGoogleLoading(false)
+      }
+      // On success the browser will redirect — no need to reset loading state
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google')
       setIsGoogleLoading(false)
@@ -72,13 +73,17 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     setIsLoading(true)
 
     try {
-      const result = await authClient.signIn.magicLink({
+      const supabase = getSupabaseBrowserClient()
+      const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        callbackURL: window.location.origin,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          shouldCreateUser: true,
+        },
       })
 
-      if (result.error) {
-        setError(result.error.message || 'Failed to send magic link')
+      if (otpError) {
+        setError(otpError.message || 'Failed to send magic link')
       } else {
         setSuccess(true)
         setEmail('')
@@ -107,7 +112,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Sign in to Pascal</DialogTitle>
+          <DialogTitle>Sign in to Floor Planner</DialogTitle>
           <button
             className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none"
             disabled={anyLoading}
@@ -143,12 +148,6 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {lastMethodLabel && (
-              <p className="text-center text-muted-foreground text-xs">
-                Last signed in with {lastMethodLabel}
-              </p>
-            )}
-
             {/* Google Sign-In */}
             <button
               className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"

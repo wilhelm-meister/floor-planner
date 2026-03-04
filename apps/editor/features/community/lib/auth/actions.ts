@@ -1,26 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { db, schema } from '@pascal-app/db'
 import { eq, and, ne, sql } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
 import { getSession } from './server'
 import { createServerSupabaseClient } from '../database/server'
-
-/**
- * Sign in with a social provider (Google)
- */
-export async function signInSocial(provider: 'google', callbackURL?: string) {
-  const result = await auth.api.signInSocial({
-    body: { provider, callbackURL: callbackURL ?? '/' },
-  })
-  revalidatePath('/')
-  if (result.url && result.redirect) {
-    redirect(result.url as '/')
-  }
-  return result
-}
+import { createSupabaseServerClient } from '@/lib/supabase/auth-server'
 
 /**
  * Update the current user's public username
@@ -218,23 +203,27 @@ export async function getPublicProfile(username: string): Promise<{
 }
 
 /**
- * Get connected accounts for the current user
+ * Get connected accounts for the current user via Supabase Auth identities.
  */
 export async function getConnectedAccounts(): Promise<
   { providerId: string; accountId: string }[]
 > {
-  const session = await getSession()
-  if (!session?.user) return []
+  try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  const result = await db
-    .select({
-      providerId: schema.accounts.providerId,
-      accountId: schema.accounts.accountId,
-    })
-    .from(schema.accounts)
-    .where(eq(schema.accounts.userId, session.user.id))
+    if (!user) return []
 
-  return result
+    // user.identities contains the OAuth providers linked to this account
+    return (user.identities ?? []).map((identity) => ({
+      providerId: identity.provider,
+      accountId: identity.id,
+    }))
+  } catch {
+    return []
+  }
 }
 
 /**

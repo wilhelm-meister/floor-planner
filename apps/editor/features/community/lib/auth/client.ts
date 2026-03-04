@@ -1,7 +1,7 @@
-/**
- * Auth client for the editor using better-auth
- * Re-exports from @pascal-app/auth package
- */
+'use client'
 
-export { authClient } from '@pascal-app/auth/client'
-export type { AuthState, User, Session } from '@pascal-app/auth/client'
+/**
+ * Auth client for the editor — now backed by Supabase Auth.
+ * Re-exports the browser Supabase client for use in client components.
+ */
+export { getSupabaseBrowserClient } from '@/lib/supabase/auth-client'

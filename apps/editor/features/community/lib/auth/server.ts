@@ -1,45 +1,45 @@
-import { headers as nextHeaders } from 'next/headers'
-import { BASE_URL } from '@/lib/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/auth-server'
+import { db, schema } from '@pascal-app/db'
+import { sql } from 'drizzle-orm'
 
 /**
- * Get the current session from Better Auth backend (server-side)
+ * Get the current session from Supabase Auth (server-side).
+ * Returns the auth_users profile (nanoid id) + a minimal session object.
  */
 export async function getSession() {
   try {
-    const headersList = await nextHeaders()
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-    // Make authenticated request to the auth backend to get session
-    const response = await fetch(`${BASE_URL}/api/auth/get-session`, {
-      headers: {
-        cookie: headersList.get('cookie') || '',
-      },
-      credentials: 'include',
-      cache: 'no-store',
-    })
-
-    if (!response.ok) {
+    if (!user?.email) {
       return null
     }
 
-    const data = await response.json()
+    const result = await db
+      .select()
+      .from(schema.users)
+      .where(sql`lower(${schema.users.email}) = lower(${user.email})`)
+      .limit(1)
 
-    // Better Auth returns the session data directly
-    if (data?.user && data?.session) {
-      return {
-        user: data.user,
-        session: data.session,
-      }
+    const profile = result[0]
+    if (!profile) {
+      return null
     }
 
-    return null
+    return {
+      user: profile,
+      session: { id: user.id },
+    }
   } catch (error) {
-    console.error('Failed to get session:', error)
+    console.error('[getSession] error:', error)
     return null
   }
 }
 
 /**
- * Get the current user from the session
+ * Get the current user from the session.
  */
 export async function getUser() {
   const session = await getSession()
