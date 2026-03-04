@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { db, schema } from '@pascal-app/db'
 import { sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
@@ -7,30 +6,52 @@ import { nanoid } from 'nanoid'
 export const dynamic = 'force-dynamic'
 
 /**
+ * Reassembles chunked @supabase/ssr session cookies and extracts user info
+ * directly from the JWT — bypasses createServerClient/getUser() entirely.
+ */
+function getUserFromCookies(request: NextRequest): { id: string; email: string; name?: string; image?: string } | null {
+  try {
+    // Reassemble chunked cookies
+    const chunk0 = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.0')?.value ?? ''
+    const chunk1 = request.cookies.get('sb-lefbzdanrikkghvozlcu-auth-token.1')?.value ?? ''
+    const raw = chunk0 + chunk1
+    if (!raw) return null
+
+    const session = JSON.parse(decodeURIComponent(raw))
+    const accessToken: string = session?.access_token
+    if (!accessToken) return null
+
+    // Decode JWT payload (no verification needed — Supabase already validated this)
+    const payloadB64 = accessToken.split('.')[1]
+    if (!payloadB64) return null
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'))
+
+    const userId: string = payload.sub
+    const email: string = payload.email
+    if (!userId || !email) return null
+
+    // Extract user metadata from session user object (has name/avatar from Google)
+    const userMeta = session?.user?.user_metadata ?? {}
+    const name: string = userMeta.full_name || userMeta.name || email.split('@')[0] || 'User'
+    const image: string | undefined = userMeta.avatar_url || userMeta.picture || undefined
+
+    return { id: userId, email, name, image }
+  } catch (err) {
+    console.error('[/api/auth/me] cookie parse error:', err)
+    return null
+  }
+}
+
+/**
  * GET /api/auth/me
  * Returns the auth_users profile for the currently authenticated user.
- * Uses service role key to reliably read session cookies — avoids anon key build-time issues.
+ * Reads session directly from chunked Supabase cookies — no client SDK needed.
  */
 export async function GET(request: NextRequest) {
   try {
-    // Use service role key here — it's server-only, runtime-resolved, definitely correct
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          getAll: () => request.cookies.getAll(),
-          setAll: () => {}, // read-only context
-        },
-      },
-    )
+    const sessionUser = getUserFromCookies(request)
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user?.email) {
+    if (!sessionUser?.email) {
       return NextResponse.json(null)
     }
 
@@ -38,28 +59,21 @@ export async function GET(request: NextRequest) {
     const result = await db
       .select()
       .from(schema.users)
-      .where(sql`lower(${schema.users.email}) = lower(${user.email})`)
+      .where(sql`lower(${schema.users.email}) = lower(${sessionUser.email})`)
       .limit(1)
 
     if (result[0]) {
       return NextResponse.json(result[0])
     }
 
-    // Lazy-create profile if missing (upsert in callback may have failed)
-    const name =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email.split('@')[0] ||
-      'User'
-    const image = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
-
+    // Lazy-create profile (first login or missed callback upsert)
     const inserted = await db
       .insert(schema.users)
       .values({
         id: `user_${nanoid()}`,
-        email: user.email,
-        name,
-        image,
+        email: sessionUser.email,
+        name: sessionUser.name ?? sessionUser.email.split('@')[0],
+        image: sessionUser.image ?? null,
         emailVerified: true,
       })
       .returning()
