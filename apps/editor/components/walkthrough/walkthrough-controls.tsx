@@ -7,21 +7,9 @@ import { useCallback, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import useEditor from '@/store/use-editor'
 
-/**
- * WalkthroughControls — lives inside the R3F Canvas.
- * Handles:
- * - Invisible ground plane for click placement (R3F event system, not raw DOM)
- * - PointerLockControls when walkthroughActive === true
- * - WASD movement in first-person
- * - ESC → exit walkthrough
- */
-
 const EYE_HEIGHT = 1.7
 const MOVE_SPEED = 3 // meters per second
 
-// Reusable objects to avoid GC
-const _raycaster = new THREE.Raycaster()
-const _mouse = new THREE.Vector2()
 const _forward = new THREE.Vector3()
 const _right = new THREE.Vector3()
 const _up = new THREE.Vector3(0, 1, 0)
@@ -33,33 +21,47 @@ export function WalkthroughControls() {
   const setWalkthroughPosition = useEditor((state) => state.setWalkthroughPosition)
   const setPreviousWallMode = useEditor((state) => state.setPreviousWallMode)
 
-  const wallMode = useViewer((state) => state.wallMode)
   const setWallMode = useViewer((state) => state.setWallMode)
   const setCameraMode = useViewer((state) => state.setCameraMode)
 
-  const { camera, gl } = useThree()
+  const { camera } = useThree()
   const plRef = useRef<any>(null)
 
-  // Preview position ref (avoids stale closures)
-  const previewRef = useRef<THREE.Vector3 | null>(null)
   const previewMeshRef = useRef<THREE.Mesh>(null)
-  const groundPlaneRef = useRef<THREE.Mesh>(null)
-
-  // WASD movement keys
   const keysRef = useRef({ w: false, a: false, s: false, d: false })
-
-  // Saved camera state for restore
   const savedCameraRef = useRef<{ pos: THREE.Vector3; target: THREE.Vector3 } | null>(null)
 
-  // ─── Placement mode: mouse hover preview via R3F ──────────────────────────
+  // Pending position — applied AFTER PointerLockControls mounts
+  const pendingPosRef = useRef<[number, number, number] | null>(null)
+
+  // ─── Apply camera position after walkthrough activates ────────────────────
+  // This runs after PointerLockControls has mounted and CameraControls unmounted
+  useEffect(() => {
+    if (!walkthroughActive || !pendingPosRef.current) return
+
+    const pos = pendingPosRef.current
+    pendingPosRef.current = null
+
+    // Use requestAnimationFrame to ensure it runs after R3F has processed the mount
+    requestAnimationFrame(() => {
+      camera.position.set(pos[0], pos[1], pos[2])
+      camera.lookAt(pos[0] + 1, pos[1], pos[2])
+      camera.updateMatrixWorld()
+
+      // Now lock the pointer
+      setTimeout(() => {
+        plRef.current?.lock()
+      }, 50)
+    })
+  }, [walkthroughActive, camera])
+
+  // ─── Placement mode: mouse hover preview ──────────────────────────────────
   const onGroundMove = useCallback(
     (e: any) => {
       if (mode !== 'walkthrough' || walkthroughActive) return
       e.stopPropagation?.()
-      if (!previewRef.current) previewRef.current = new THREE.Vector3()
-      previewRef.current.set(e.point.x, 0.05, e.point.z)
       if (previewMeshRef.current) {
-        previewMeshRef.current.position.copy(previewRef.current)
+        previewMeshRef.current.position.set(e.point.x, 0.05, e.point.z)
         previewMeshRef.current.visible = true
       }
     },
@@ -74,11 +76,11 @@ export function WalkthroughControls() {
       const clickPos = e.point
       const eyePos: [number, number, number] = [clickPos.x, EYE_HEIGHT, clickPos.z]
 
-      // Save current camera state
-      const pos = camera.position.clone()
-      const target = new THREE.Vector3()
-      camera.getWorldDirection(target).add(camera.position)
-      savedCameraRef.current = { pos, target }
+      // Save current camera state BEFORE anything changes
+      const currentPos = camera.position.clone()
+      const currentTarget = new THREE.Vector3()
+      camera.getWorldDirection(currentTarget).add(camera.position)
+      savedCameraRef.current = { pos: currentPos, target: currentTarget }
 
       // Save current wallMode
       const currentWallMode = useViewer.getState().wallMode
@@ -88,23 +90,17 @@ export function WalkthroughControls() {
       setCameraMode('perspective')
       setWallMode('up')
 
-      // Move camera to eye height
-      camera.position.set(eyePos[0], eyePos[1], eyePos[2])
-      camera.lookAt(eyePos[0] + 1, eyePos[1], eyePos[2])
+      // Store the desired position — will be applied in the useEffect above
+      // AFTER PointerLockControls mounts and CameraControls unmounts
+      pendingPosRef.current = eyePos
 
-      // Store position and activate
+      // Store position and activate (triggers re-render → CameraControls unmounts → PLC mounts)
       setWalkthroughPosition(eyePos)
       setWalkthroughActive(true)
-
-      // Lock pointer after a short delay (let React re-render first)
-      setTimeout(() => {
-        plRef.current?.lock()
-      }, 150)
     },
     [mode, walkthroughActive, camera, setPreviousWallMode, setCameraMode, setWallMode, setWalkthroughPosition, setWalkthroughActive],
   )
 
-  // Hide preview when mouse leaves the ground
   const onGroundLeave = useCallback(() => {
     if (previewMeshRef.current) {
       previewMeshRef.current.visible = false
@@ -118,9 +114,8 @@ export function WalkthroughControls() {
     const onLockChange = () => {
       const locked = document.pointerLockElement !== null
       if (!locked) {
-        // Pointer was unlocked (ESC or programmatic) — exit walkthrough
         const prevWallMode = useEditor.getState().previousWallMode
-        
+
         setWalkthroughActive(false)
         setWalkthroughPosition(null)
         if (prevWallMode) {
@@ -129,11 +124,12 @@ export function WalkthroughControls() {
         }
         useEditor.getState().setMode('select')
 
-        // Restore camera
+        // Restore camera position
         if (savedCameraRef.current) {
           const { pos, target } = savedCameraRef.current
           camera.position.copy(pos)
           camera.lookAt(target)
+          camera.updateMatrixWorld()
           savedCameraRef.current = null
         }
       }
@@ -187,7 +183,7 @@ export function WalkthroughControls() {
     if (keys.a) camera.position.addScaledVector(_right, -speed)
     if (keys.d) camera.position.addScaledVector(_right, speed)
 
-    // Keep eye height
+    // Keep eye height constant
     camera.position.y = EYE_HEIGHT
   })
 
@@ -204,7 +200,6 @@ export function WalkthroughControls() {
       {/* Invisible ground plane for raycasting — only in placement mode */}
       {isPlacement && (
         <mesh
-          ref={groundPlaneRef}
           position={[0, 0, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
           onPointerMove={onGroundMove as any}
@@ -220,7 +215,7 @@ export function WalkthroughControls() {
       {/* Placement preview — mannequin marker */}
       {isPlacement && (
         <mesh ref={previewMeshRef} visible={false}>
-          {/* Cylinder body */}
+          {/* Body */}
           <group>
             <mesh position={[0, 0.85, 0]}>
               <cylinderGeometry args={[0.15, 0.2, 1.4, 8]} />
