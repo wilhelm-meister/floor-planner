@@ -55,13 +55,14 @@ export const WallRenderer = ({ node }: { node: WallNode }) => {
     // Only handle left-click; right-click is for camera/perspective
     if (e.button !== 0) return
     if (useViewer.getState().cameraDragging) return
+
+    e.stopPropagation()
+    gl.domElement.setPointerCapture(e.pointerId)
+
     if (node.locked) {
       handlers.onPointerDown?.(e)  // Selektion noch feuern
       return                        // aber kein Drag starten
     }
-
-    e.stopPropagation()
-    gl.domElement.setPointerCapture(e.pointerId)
 
     const worldPos = getWorldPos(e.nativeEvent)
     dragState.current = {
