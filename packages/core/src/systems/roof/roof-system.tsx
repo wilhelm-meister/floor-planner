@@ -107,6 +107,7 @@ function getSideProfile(
   roofHeight: number,
   eaveOverhang: number = EAVE_OVERHANG,
   wallThickness: number = DEFAULT_WALL_THICKNESS,
+  baseHeight: number = BASE_HEIGHT,
 ): {
   pointsA: { x: number; y: number }[]
   pointsB: { x: number; y: number }[]
@@ -116,7 +117,7 @@ function getSideProfile(
 } {
   const halfWall = wallThickness / 2
 
-  const rise = Math.max(0, roofHeight - BASE_HEIGHT)
+  const rise = Math.max(0, roofHeight - baseHeight)
   const run = width - halfWall
 
   const angle = solvePitch(rise, run, THICKNESS_A, THICKNESS_B)
@@ -124,11 +125,11 @@ function getSideProfile(
   const cosA = Math.cos(angle)
   const sinA = Math.sin(angle)
 
-  const ridgeUnderY = BASE_HEIGHT + run * tanA
+  const ridgeUnderY = baseHeight + run * tanA
   const ridgeInterfaceY = ridgeUnderY + THICKNESS_B / cosA
   const ridgeTopY = ridgeInterfaceY + THICKNESS_A / cosA
 
-  const wallOuterTopY = BASE_HEIGHT - wallThickness * tanA
+  const wallOuterTopY = baseHeight - wallThickness * tanA
 
   const overhangDx = eaveOverhang * cosA
 
@@ -173,14 +174,14 @@ function getSideProfile(
     { x: dir * zInner, y: 0 },
     { x: dir * zOuter, y: 0 },
     { x: dir * zOuter, y: Math.max(0, wallOuterTopY) },
-    { x: dir * zInner, y: BASE_HEIGHT },
+    { x: dir * zInner, y: baseHeight },
   ]
 
   // Gable Top (C1)
   const pointsC1 = [
-    { x: 0, y: BASE_HEIGHT },
-    { x: dir * zInner, y: BASE_HEIGHT },
-    { x: dir * zInner, y: BASE_HEIGHT },
+    { x: 0, y: baseHeight },
+    { x: dir * zInner, y: baseHeight },
+    { x: dir * zInner, y: baseHeight },
     { x: 0, y: ridgeUnderY },
   ]
 
@@ -188,8 +189,8 @@ function getSideProfile(
   const pointsC2 = [
     { x: 0, y: 0 },
     { x: dir * zInner, y: 0 },
-    { x: dir * zInner, y: BASE_HEIGHT },
-    { x: 0, y: BASE_HEIGHT },
+    { x: dir * zInner, y: baseHeight },
+    { x: 0, y: baseHeight },
   ]
 
   return { pointsA, pointsB, pointsSide, pointsC1, pointsC2 }
@@ -200,12 +201,13 @@ function getSideProfile(
  */
 export function generateRoofGeometry(roofNode: RoofNode): THREE.BufferGeometry {
   const { length, height, leftWidth, rightWidth, eaveOverhang = EAVE_OVERHANG, rakeOverhang = RAKE_OVERHANG, wallThickness = DEFAULT_WALL_THICKNESS } = roofNode
+  const baseHeight = roofNode.baseHeight ?? BASE_HEIGHT
 
   const ridgeLength = length
 
   // Get profiles for both sides
-  const leftP = getSideProfile(1, leftWidth, height, eaveOverhang, wallThickness)
-  const rightP = getSideProfile(-1, rightWidth, height, eaveOverhang, wallThickness)
+  const leftP = getSideProfile(1, leftWidth, height, eaveOverhang, wallThickness, baseHeight)
+  const rightP = getSideProfile(-1, rightWidth, height, eaveOverhang, wallThickness, baseHeight)
 
   // Create shapes from profiles
   const shapes = {

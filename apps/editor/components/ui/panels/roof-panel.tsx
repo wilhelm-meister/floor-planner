@@ -66,6 +66,16 @@ export function RoofPanel() {
           unit="m"
         />
         <SliderControl
+          label="Fascia"
+          value={Math.round((node.baseHeight ?? 0.5) * 100) / 100}
+          onChange={(v) => handleUpdate({ baseHeight: Math.max(0, v) })}
+          min={0}
+          max={2}
+          precision={2}
+          step={0.05}
+          unit="m"
+        />
+        <SliderControl
           label="Pitch"
           value={Math.round(Math.atan(node.height / ((node.leftWidth + node.rightWidth) / 2)) * (180 / Math.PI))}
           onChange={(deg) => {

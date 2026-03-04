@@ -23,6 +23,8 @@ export const RoofNode = BaseNode.extend({
   rakeOverhang: z.number().default(0.3),
   // Gable wall thickness — should match the building wall thickness below (default 0.1m)
   wallThickness: z.number().default(0.1),
+  // Height of the fascia / knee wall / truss heel (in meters, default 0.5m)
+  baseHeight: z.number().default(0.5),
 }).describe(
   dedent`
   Roof node - used to represent a gable roof in the building
@@ -33,6 +35,7 @@ export const RoofNode = BaseNode.extend({
   - leftWidth: horizontal width of the left slope (from ridge to eave)
   - rightWidth: horizontal width of the right slope (from ridge to eave)
   Total width = leftWidth + rightWidth
+  - baseHeight: height of the fascia/knee wall at the eave (default 0.5m)
   `,
 )
 
