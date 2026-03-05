@@ -45,7 +45,7 @@ function updateSlabGeometry(node: SlabNode, mesh: THREE.Mesh) {
 }
 
 /** Half of default wall thickness — used to extend slab geometry under walls */
-const SLAB_OUTSET = 0.05
+const SLAB_OUTSET = 0
 
 /**
  * Expand a polygon outward by a uniform distance.
