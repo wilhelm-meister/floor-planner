@@ -180,19 +180,12 @@ export default function ViewerPage() {
             <Viewer>
               <ViewerCameraControls />
               <ViewerZoneSystem />
+              <InteractiveSystem />
             </Viewer>
           </ErrorBoundary>
         </>
       )}
-<<<<<<< HEAD
-=======
-      
-      <Viewer>
-        <ViewerCameraControls />
-        <ViewerZoneSystem />
-        <InteractiveSystem />
-      </Viewer>
->>>>>>> e5db879 (feat: light system — placeable lights with PointLight in 3D view)
+
     </div>
   )
 }
