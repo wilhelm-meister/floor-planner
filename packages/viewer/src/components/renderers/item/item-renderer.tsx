@@ -112,9 +112,9 @@ const ModelRenderer = ({ node }: { node: ItemNode }) => {
   useEffect(() => {
     const interactive = interactiveRef.current
     if (!interactive) return
-    useInteractive.getState().initItem(node.id, interactive)
+    useInteractive.getState().initItem(node.id, interactive, node.controlValues)
     return () => useInteractive.getState().removeItem(node.id)
-  }, [node.id])
+  }, [node.id, node.controlValues])
 
   useMemo(() => {
     scene.traverse((child) => {
