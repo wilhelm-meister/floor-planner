@@ -90,6 +90,9 @@ type EditorState = {
   setWalkthroughActive: (active: boolean) => void
   previousWallMode: 'up' | 'cutaway' | 'down' | null
   setPreviousWallMode: (mode: 'up' | 'cutaway' | 'down' | null) => void
+  // Preview mode (viewer-like experience inside the editor)
+  isPreviewMode: boolean
+  setPreviewMode: (preview: boolean) => void
 }
 
 const useEditor = create<EditorState>()((set, get) => ({
@@ -226,6 +229,16 @@ const useEditor = create<EditorState>()((set, get) => ({
   setWalkthroughActive: (active) => set({ walkthroughActive: active }),
   previousWallMode: null,
   setPreviousWallMode: (mode) => set({ previousWallMode: mode }),
+  isPreviewMode: false,
+  setPreviewMode: (preview) => {
+    if (preview) {
+      set({ isPreviewMode: true, mode: 'select', tool: null, catalogCategory: null })
+      // Clear zone/item selection for clean viewer drill-down hierarchy
+      useViewer.getState().setSelection({ selectedIds: [], zoneId: null })
+    } else {
+      set({ isPreviewMode: false })
+    }
+  },
 }))
 
 export default useEditor

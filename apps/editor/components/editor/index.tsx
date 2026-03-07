@@ -1,16 +1,18 @@
 'use client'
 
 import { initSpaceDetectionSync, initSpatialGridSync, useScene } from '@pascal-app/core'
-import { useViewer, Viewer } from '@pascal-app/viewer'
+import { InteractiveSystem, useViewer, Viewer } from '@pascal-app/viewer'
 import { useEffect } from 'react'
 import { useProjectScene } from '@/features/community/lib/models/hooks'
 import { useProjectStore } from '@/features/community/lib/projects/store'
 import { useKeyboard } from '@/hooks/use-keyboard'
 import { initSFXBus } from '@/lib/sfx-bus'
 import useEditor from '@/store/use-editor'
+import { ViewerOverlay } from '@/app/viewer/[id]/viewer-overlay'
 import { FeedbackDialog } from '../feedback-dialog'
 import { AiRenderButton } from '../ai-render/ai-render-button'
 import { ScreenshotHelper } from '../ai-render/screenshot-helper'
+import { PreviewButton } from '../preview-button'
 import { CeilingSystem } from '../systems/ceiling/ceiling-system'
 import { ZoneSystem } from '../systems/zone/zone-system'
 import { ToolManager } from '../tools/tool-manager'
@@ -115,6 +117,8 @@ export default function Editor({ projectId }: EditorProps) {
   const isProjectLoading = useProjectStore((state) => state.isLoading)
   const isSceneLoading = useProjectStore((state) => state.isSceneLoading)
   const isLoading = isProjectLoading || isSceneLoading
+  const isPreviewMode = useEditor((s) => s.isPreviewMode)
+  const activeProject = useProjectStore((s) => s.activeProject)
 
   useEffect(() => {
     if (projectId) {
@@ -134,44 +138,65 @@ export default function Editor({ projectId }: EditorProps) {
   return (
     <div className="w-full h-full dark text-foreground">
       {isLoading && <SceneLoader />}
-      <ActionMenu />
-      <PanelManager />
-      <HelperManager />
 
-      {/* Walkthrough overlay (exit button + crosshair) */}
-      <WalkthroughOverlay />
-      <WalkthroughCursor />
-      <LockCursor />
+      {isPreviewMode ? (
+        <>
+          <ViewerOverlay projectName={activeProject?.name} />
+          <button
+            onClick={() => useEditor.getState().setPreviewMode(false)}
+            className="pointer-events-auto fixed top-4 left-4 z-50 flex items-center gap-2 rounded-lg border border-border bg-background/95 shadow-lg backdrop-blur-md px-3 py-2 text-sm font-medium cursor-pointer hover:bg-accent/90 transition-colors"
+          >
+            ← Back to Editor
+          </button>
+        </>
+      ) : (
+        <>
+          <ActionMenu />
+          <PanelManager />
+          <HelperManager />
 
-      {/* Top-right controls */}
-      <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
-        <div className="pointer-events-auto">
-          <AiRenderButton />
-        </div>
-        <div className="pointer-events-auto">
-          <FeedbackDialog projectId={projectId} />
-        </div>
-      </div>
+          {/* Walkthrough overlay (exit button + crosshair) */}
+          <WalkthroughOverlay />
+          <WalkthroughCursor />
+          <LockCursor />
 
-      <SidebarProvider className="fixed z-20">
-        <AppSidebar />
-      </SidebarProvider>
+          {/* Top-right controls */}
+          <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-start gap-2">
+            <div className="pointer-events-auto">
+              <PreviewButton />
+            </div>
+            <div className="pointer-events-auto">
+              <AiRenderButton />
+            </div>
+            <div className="pointer-events-auto">
+              <FeedbackDialog projectId={projectId} />
+            </div>
+          </div>
+
+          <SidebarProvider className="fixed z-20">
+            <AppSidebar />
+          </SidebarProvider>
+        </>
+      )}
+
       <ErrorBoundary key={projectId} fallback={<EditorSceneCrashFallback />}>
-        <Viewer selectionManager="custom">
-          <SelectionManager />
-          <FloatingActionMenu />
+        <Viewer selectionManager={isPreviewMode ? 'default' : 'custom'}>
+          {!isPreviewMode && <SelectionManager />}
+          {!isPreviewMode && <FloatingActionMenu />}
           <ExportManager />
-          {/* Editor only system to toggle zone visibility */}
+          {/* Swap zone systems: viewer drill-down vs editor layer toggle */}
           <ZoneSystem />
           <CeilingSystem />
-          {/* <Stats /> */}
-          <Grid cellColor="#aaa" sectionColor="#ccc" fadeDistance={500} />
-          <ToolManager />
+          {!isPreviewMode && (
+            <Grid cellColor="#aaa" sectionColor="#ccc" fadeDistance={500} />
+          )}
+          {!isPreviewMode && <ToolManager />}
           <CustomCameraControls />
-          <WalkthroughControls />
+          {!isPreviewMode && <WalkthroughControls />}
           <ThumbnailGenerator projectId={projectId} />
-          <SiteEdgeLabels />
-          <ScreenshotHelper />
+          {!isPreviewMode && <SiteEdgeLabels />}
+          {!isPreviewMode && <ScreenshotHelper />}
+          {isPreviewMode && <InteractiveSystem />}
         </Viewer>
       </ErrorBoundary>
     </div>

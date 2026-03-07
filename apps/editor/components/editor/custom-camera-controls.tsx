@@ -4,17 +4,23 @@ import { type CameraControlEvent, emitter, sceneRegistry, useScene } from '@pasc
 import { useViewer } from '@pascal-app/viewer'
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { Vector3 } from 'three'
+import { Box3, Vector3 } from 'three'
 import useEditor from '@/store/use-editor'
 
 const currentTarget = new Vector3()
+const tempBox = new Box3()
+const tempCenter = new Vector3()
+const tempSize = new Vector3()
 
 const CameraControlsInner = () => {
   const controls = useRef<CameraControlsImpl>(null!)
-  const currentLevelId = useViewer((state) => state.selection.levelId)
+  const isPreviewMode = useEditor((s) => s.isPreviewMode)
+  const selection = useViewer((s) => s.selection)
+  const currentLevelId = selection.levelId
   const firstLoad = useRef(true)
 
   useEffect(() => {
+    if (isPreviewMode) return // Preview mode uses auto-navigate instead
     let targetY = 0
     if (currentLevelId) {
       const levelMesh = sceneRegistry.nodes.get(currentLevelId)
@@ -33,7 +39,7 @@ const CameraControlsInner = () => {
       currentTarget.z,
       true,
     )
-  }, [currentLevelId])
+  }, [currentLevelId, isPreviewMode])
 
   // Configure mouse buttons based on control mode and camera mode
   const cameraMode = useViewer((state) => state.cameraMode)
@@ -45,12 +51,14 @@ const CameraControlsInner = () => {
         : CameraControlsImpl.ACTION.DOLLY
 
     return {
-      left: CameraControlsImpl.ACTION.NONE,
+      left: isPreviewMode
+        ? CameraControlsImpl.ACTION.SCREEN_PAN
+        : CameraControlsImpl.ACTION.NONE,
       middle: CameraControlsImpl.ACTION.SCREEN_PAN,
       right: CameraControlsImpl.ACTION.ROTATE,
       wheel: wheelAction,
     }
-  }, [cameraMode])
+  }, [cameraMode, isPreviewMode])
 
   useEffect(() => {
     const keyState = {
@@ -73,11 +81,15 @@ const CameraControlsInner = () => {
           ? CameraControlsImpl.ACTION.ZOOM
           : CameraControlsImpl.ACTION.DOLLY
       controls.current.mouseButtons.wheel = wheelAction
-      controls.current.mouseButtons.left = CameraControlsImpl.ACTION.NONE
       controls.current.mouseButtons.middle = CameraControlsImpl.ACTION.SCREEN_PAN
       controls.current.mouseButtons.right = CameraControlsImpl.ACTION.ROTATE
-      if (space) {
+      if (isPreviewMode) {
+        // In preview mode, left-click is always pan (viewer-style)
         controls.current.mouseButtons.left = CameraControlsImpl.ACTION.SCREEN_PAN
+      } else if (space) {
+        controls.current.mouseButtons.left = CameraControlsImpl.ACTION.SCREEN_PAN
+      } else {
+        controls.current.mouseButtons.left = CameraControlsImpl.ACTION.NONE
       }
     }
 
@@ -152,7 +164,62 @@ const CameraControlsInner = () => {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('pointerup', onPointerUp)
     }
-  }, [cameraMode])
+  }, [cameraMode, isPreviewMode])
+
+  // Preview mode: auto-navigate camera to selected node (viewer behavior)
+  const previewTargetNodeId = isPreviewMode
+    ? (selection.zoneId ?? selection.levelId ?? selection.buildingId)
+    : null
+
+  useEffect(() => {
+    if (!isPreviewMode || !controls.current) return
+
+    const nodes = useScene.getState().nodes
+    let node = previewTargetNodeId ? nodes[previewTargetNodeId] : null
+
+    if (!previewTargetNodeId) {
+      const site = Object.values(nodes).find((n) => n.type === 'site')
+      node = site || null
+    }
+    if (!node) return
+
+    // Check if node has a saved camera
+    if (node.camera) {
+      const { position, target } = node.camera
+      requestAnimationFrame(() => {
+        if (!controls.current) return
+        controls.current.setLookAt(
+          position[0], position[1], position[2],
+          target[0], target[1], target[2],
+          true,
+        )
+      })
+      return
+    }
+
+    if (!previewTargetNodeId) return
+
+    // Calculate camera position from bounding box
+    const object3D = sceneRegistry.nodes.get(previewTargetNodeId)
+    if (!object3D) return
+
+    tempBox.setFromObject(object3D)
+    tempBox.getCenter(tempCenter)
+    tempBox.getSize(tempSize)
+
+    const maxDim = Math.max(tempSize.x, tempSize.y, tempSize.z)
+    const distance = Math.max(maxDim * 2, 15)
+
+    controls.current.setLookAt(
+      tempCenter.x + distance * 0.7,
+      tempCenter.y + distance * 0.5,
+      tempCenter.z + distance * 0.7,
+      tempCenter.x,
+      tempCenter.y,
+      tempCenter.z,
+      true,
+    )
+  }, [isPreviewMode, previewTargetNodeId])
 
   useEffect(() => {
     const handleNodeCapture = ({ nodeId }: CameraControlEvent) => {
