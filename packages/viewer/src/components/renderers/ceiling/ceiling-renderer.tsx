@@ -15,6 +15,9 @@ const ceilingTopMaterial = new MeshBasicNodeMaterial({
   transparent: true,
   depthWrite: false,
   side: FrontSide,
+  polygonOffset: true,
+  polygonOffsetFactor: 1, // Push ceiling slightly back to avoid Z-fighting with walls
+  polygonOffsetUnits: 1,
   // Disabled as we only show ceiling grid when needed
   // alphaTestNode: float(0.4), // Discard pixels with alpha below 0.4 to create grid lines and not affect depth buffer
 })
@@ -23,6 +26,9 @@ const ceilingBottomMaterial = new MeshBasicNodeMaterial({
   color: 0x999999,
   transparent: true,
   side: BackSide,
+  polygonOffset: true,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1,
 })
 
 // Create grid pattern based on local position
