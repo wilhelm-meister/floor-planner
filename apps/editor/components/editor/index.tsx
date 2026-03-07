@@ -209,7 +209,7 @@ export default function Editor({ projectId }: EditorProps) {
           <ThumbnailGenerator projectId={projectId} />
           {!isPreviewMode && <SiteEdgeLabels />}
           {!isPreviewMode && <ScreenshotHelper />}
-          {isPreviewMode && <InteractiveSystem />}
+          <InteractiveSystem />
         </Viewer>
       </ErrorBoundary>
     </div>
