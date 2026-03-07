@@ -102,7 +102,19 @@ const ModelRenderer = ({ node }: { node: ItemNode }) => {
     nodes.cutout.visible = false
   }
 
-  const handlers = useNodeEvents(node, 'item')
+  const rawHandlers = useNodeEvents(node, 'item')
+  // Stop propagation so items on ceilings/slabs don't accidentally select the surface behind them
+  const handlers = {
+    ...rawHandlers,
+    onPointerDown: (e: Parameters<typeof rawHandlers.onPointerDown>[0]) => {
+      e.stopPropagation()
+      rawHandlers.onPointerDown(e)
+    },
+    onPointerUp: (e: Parameters<typeof rawHandlers.onPointerUp>[0]) => {
+      e.stopPropagation()
+      rawHandlers.onPointerUp(e)
+    },
+  }
 
   useEffect(() => {
     if (!node.parentId) return
