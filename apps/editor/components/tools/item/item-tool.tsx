@@ -7,12 +7,15 @@ export const ItemTool: React.FC = () => {
   const selectedItem = useEditor((state) => state.selectedItem)
   const draftNode = useDraftNode()
 
+  // Don't render anything if no item is selected
+  if (!selectedItem) return null
+
   const cursor = usePlacementCoordinator({
-    asset: selectedItem!,
+    asset: selectedItem,
     draftNode,
     initDraft: (gridPosition) => {
       if (!selectedItem?.attachTo) {
-        draftNode.create(gridPosition, selectedItem!)
+        draftNode.create(gridPosition, selectedItem)
       }
     },
     onCommitted: () => {
@@ -21,6 +24,5 @@ export const ItemTool: React.FC = () => {
     },
   })
 
-  if (!selectedItem) return null
   return <>{cursor}</>
 }
