@@ -612,6 +612,21 @@ export const CATALOG_ITEMS: AssetInput[] = [
     rotation: [0, 0, 0],
     dimensions: [1, 0.5, 1.5],
     attachTo: "ceiling",
+    interactive: {
+      effects: [
+        {
+          kind: 'animation',
+          clips: {
+            on: 'On',
+          },
+        }
+      ],
+      controls: [
+        {
+          kind: 'toggle',
+        }
+      ],
+    }
   },
 
   {
@@ -1214,6 +1229,25 @@ export const CATALOG_ITEMS: AssetInput[] = [
     rotation: [0, 0, 0],
     dimensions: [1, 1, 1],
     attachTo: "ceiling",
+    interactive: {
+      controls: [
+        {
+          kind: 'toggle',
+        },
+        {
+          kind: 'slider', label: 'Intensity', min: 0, max: 100, unit: '%', displayMode: 'dial',
+          default: 100
+        }
+      ],
+      effects: [
+        {
+          kind: 'light',
+          intensityRange: [0, 2],
+          color: '#ffffff',
+          offset: [0, -0.5, 0],
+        }
+      ]
+    }
   },
 
   {
@@ -1227,6 +1261,25 @@ export const CATALOG_ITEMS: AssetInput[] = [
     offset: [0.04, 0, 0.02],
     rotation: [0, 0, 0],
     dimensions: [1, 1.9, 1],
+    interactive: {
+      controls: [
+        {
+          kind: 'toggle',
+        },
+        {
+          kind: 'slider', label: 'Intensity', min: 0, max: 100, unit: '%', displayMode: 'dial',
+          default: 100
+        }
+      ],
+      effects: [
+        {
+          kind: 'light',
+          intensityRange: [0, 2],
+          color: '#ffffff',
+          offset: [0, 1.4, 0],
+        }
+      ]
+    }
   },
 
   {
