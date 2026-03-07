@@ -1,6 +1,6 @@
 'use client'
 
-import { initSpaceDetectionSync, initSpatialGridSync, useScene } from '@pascal-app/core'
+import { initSpaceDetectionSync, initSpatialGridSync, useScene, type ZoneNode } from '@pascal-app/core'
 import { InteractiveSystem, useViewer, Viewer } from '@pascal-app/viewer'
 import { useEffect } from 'react'
 import { useProjectScene } from '@/features/community/lib/models/hooks'
@@ -133,6 +133,19 @@ export default function Editor({ projectId }: EditorProps) {
     return () => {
       document.body.classList.remove('dark')
     }
+  }, [])
+
+  // Sync editor zone selection → viewer store so InteractiveSystem shows light toggles
+  useEffect(() => {
+    return useViewer.subscribe((state) => {
+      const { selectedIds } = state.selection
+      if (selectedIds.length === 0) return
+      const nodes = useScene.getState().nodes
+      const selectedNode = nodes[selectedIds[0] as keyof typeof nodes]
+      if (selectedNode?.type === 'zone') {
+        useViewer.getState().setSelection({ zoneId: (selectedNode as ZoneNode).id })
+      }
+    })
   }, [])
 
   return (
