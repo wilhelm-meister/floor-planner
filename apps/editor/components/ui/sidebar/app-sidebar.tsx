@@ -9,6 +9,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
+  useSidebarStore,
 } from "@/components/ui/primitives/sidebar";
 import { cn } from "@/lib/utils";
 import { SettingsPanel } from "./panels/settings-panel";
@@ -30,6 +31,11 @@ export function AppSidebar() {
 
   useEffect(() => {
     setMounted(true);
+    // Widen default sidebar (288px → 432px) for better project title visibility
+    const store = useSidebarStore.getState();
+    if (store.width <= 288) {
+      store.setWidth(432);
+    }
   }, []);
 
   useEffect(() => {

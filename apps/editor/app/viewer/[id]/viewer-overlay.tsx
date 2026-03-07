@@ -67,6 +67,8 @@ interface ViewerOverlayProps {
   owner?: ProjectOwner | null
   canShowScans?: boolean
   canShowGuides?: boolean
+  onBack?: () => void
+  hideCollections?: boolean
 }
 
 export const ViewerOverlay = ({
@@ -74,6 +76,8 @@ export const ViewerOverlay = ({
   owner,
   canShowScans = true,
   canShowGuides = true,
+  onBack,
+  hideCollections,
 }: ViewerOverlayProps) => {
   const selection = useViewer((s) => s.selection)
   const nodes = useScene((s) => s.nodes)
@@ -129,12 +133,21 @@ export const ViewerOverlay = ({
         <div className="pointer-events-auto flex flex-col rounded-2xl border border-border/40 bg-background/95 shadow-lg backdrop-blur-xl transition-colors duration-200 ease-out overflow-hidden min-w-[200px]">
           {/* Project info + back */}
           <div className="flex items-center gap-3 px-3 py-2.5">
-            <Link
-              href="/"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-white/10 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-            </Link>
+            {onBack ? (
+              <button
+                onClick={onBack}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-white/10 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+            ) : (
+              <Link
+                href="/"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-white/10 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            )}
             <div className="min-w-0">
               <div className="text-sm font-medium text-foreground truncate">
                 {projectName || 'Untitled'}
