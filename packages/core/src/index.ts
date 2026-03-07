@@ -42,6 +42,8 @@ export {
 // Schema
 export * from './schema'
 export { default as useScene } from './store/use-scene'
+export { useInteractive } from './store/use-interactive'
+export type { ControlValue, ItemInteractiveState } from './store/use-interactive'
 // Systems
 export { CeilingSystem } from './systems/ceiling/ceiling-system'
 export { DoorSystem } from './systems/door/door-system'
