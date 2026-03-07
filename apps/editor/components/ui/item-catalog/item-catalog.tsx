@@ -59,14 +59,15 @@ export function ItemCatalog({ category }: { category: CatalogCategory }) {
   });
 
   // Auto-select first item if current selection is not in the filtered list
-  useEffect(() => {
-    const isCurrentItemInCategory = filteredItems.some(
-      (item) => item.src === selectedItem?.src,
-    );
-    if (!isCurrentItemInCategory && filteredItems.length > 0) {
-      setSelectedItem(filteredItems[0] as AssetInput);
-    }
-  }, [filteredItems, selectedItem?.src, setSelectedItem]);
+  // DISABLED: Let users browse catalog without auto-selecting
+  // useEffect(() => {
+  //   const isCurrentItemInCategory = filteredItems.some(
+  //     (item) => item.src === selectedItem?.src,
+  //   );
+  //   if (!isCurrentItemInCategory && filteredItems.length > 0) {
+  //     setSelectedItem(filteredItems[0] as AssetInput);
+  //   }
+  // }, [filteredItems, selectedItem?.src, setSelectedItem]);
 
   // Get attachment icon based on attachTo type
   const getAttachmentIcon = (attachTo: AssetInput["attachTo"]) => {
