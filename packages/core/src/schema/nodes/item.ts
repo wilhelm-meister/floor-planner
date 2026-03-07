@@ -114,6 +114,9 @@ export const ItemNode = BaseNode.extend({
   wallT: z.number().optional(), // 0-1 parametric position along wall
 
   asset: assetSchema,
+  // Persisted interactive control values (e.g. light on/off, brightness)
+  // Index matches asset.interactive.controls[] order
+  controlValues: z.array(z.union([z.boolean(), z.number()])).optional(),
 }).describe(dedent`Item node - used to represent a item in the building
   - position: position in level coordinate system (or parent coordinate system if attached)
   - rotation: rotation in level coordinate system (or parent coordinate system if attached)
