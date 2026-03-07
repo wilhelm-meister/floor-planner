@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import type { Interactive } from '../schema/nodes/item'
 import type { AnyNodeId } from '../schema/types'
-import { useScene } from './use-scene'
+import useScene from './use-scene'
 
 // Runtime value for each control (matches discriminated union kinds)
 export type ControlValue = boolean | number
