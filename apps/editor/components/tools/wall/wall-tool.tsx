@@ -1,14 +1,62 @@
-import { emitter, type GridEvent, useScene, WallNode } from '@pascal-app/core'
+import { emitter, type GridEvent, useScene, WallNode, LevelNode, type AnyNodeId } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
-import { DoubleSide, type Mesh, type Group, Shape, ShapeGeometry, Vector3 } from 'three'
+import { DoubleSide, type Mesh, type Group, Shape, ShapeGeometry, Vector3, RingGeometry, MeshBasicMaterial } from 'three'
 import { sfxEmitter } from '@/lib/sfx-bus'
 import useEditor from '@/store/use-editor'
 import { CursorSphere } from '../shared/cursor-sphere'
 
 const WALL_HEIGHT = 2.5
 const WALL_THICKNESS = 0.15
+const ENDPOINT_SNAP_RADIUS = 0.3 // meters
+
+interface SnapPoint {
+  x: number
+  z: number
+  isStartPoint?: boolean // true if this is the current drawing session's start point
+}
+
+/**
+ * Collect all wall endpoints for the current level
+ */
+const getWallEndpoints = (levelId: string | null): SnapPoint[] => {
+  if (!levelId) return []
+  const nodes = useScene.getState().nodes
+  const level = nodes[levelId as AnyNodeId] as LevelNode | undefined
+  if (!level) return []
+
+  const points: SnapPoint[] = []
+  for (const childId of level.children) {
+    const node = nodes[childId as AnyNodeId]
+    if (node?.type === 'wall') {
+      const wall = node as WallNode
+      points.push({ x: wall.start[0], z: wall.start[1] })
+      points.push({ x: wall.end[0], z: wall.end[1] })
+    }
+  }
+  return points
+}
+
+/**
+ * Find the nearest endpoint within SNAP_RADIUS
+ * Returns the point and its distance, or null if none found
+ */
+const findNearestEndpoint = (
+  pos: Vector3,
+  points: SnapPoint[],
+): (SnapPoint & { distance: number }) | null => {
+  let best: (SnapPoint & { distance: number }) | null = null
+  for (const p of points) {
+    const dx = pos.x - p.x
+    const dz = pos.z - p.z
+    const dist = Math.sqrt(dx * dx + dz * dz)
+    if (dist < ENDPOINT_SNAP_RADIUS && (!best || dist < best.distance)) {
+      best = { ...p, distance: dist }
+    }
+  }
+  return best
+}
 
 /**
  * Snap point to 45° angle increments relative to start point
@@ -104,16 +152,36 @@ const commitWallDrawing = (start: [number, number], end: [number, number]) => {
 export const WallTool: React.FC = () => {
   const cursorRef = useRef<Group>(null)
   const wallPreviewRef = useRef<Mesh>(null!)
+  const snapRingRef = useRef<Mesh>(null!)
   const startingPoint = useRef(new Vector3(0, 0, 0))
   const endingPoint = useRef(new Vector3(0, 0, 0))
   const buildingState = useRef(0)
   const shiftPressed = useRef(false)
   const labelRef = useRef<Group>(null)
   const [wallLength, setWallLength] = useState<number | null>(null)
+  const [isSnapping, setIsSnapping] = useState(false)
 
   useEffect(() => {
     let gridPosition: [number, number] = [0, 0]
     let previousWallEnd: [number, number] | null = null
+    // Cache wall endpoints — rebuilt when scene changes (or lazily on each move, cheap enough)
+    let cachedEndpoints: SnapPoint[] = []
+    let lastNodesVersion = -1
+
+    const getEndpoints = (includeStartPoint?: SnapPoint): SnapPoint[] => {
+      // Rebuild if scene changed
+      const nodes = useScene.getState().nodes
+      const currentVersion = Object.keys(nodes).length
+      if (currentVersion !== lastNodesVersion) {
+        lastNodesVersion = currentVersion
+        const levelId = useViewer.getState().selection.levelId
+        cachedEndpoints = getWallEndpoints(levelId)
+      }
+      if (includeStartPoint) {
+        return [...cachedEndpoints, includeStartPoint]
+      }
+      return cachedEndpoints
+    }
 
     const onGridMove = (event: GridEvent) => {
       if (!cursorRef.current || !wallPreviewRef.current) return
@@ -126,9 +194,36 @@ export const WallTool: React.FC = () => {
 
       if (buildingState.current === 1) {
         // Snap to 45° angles — Shift inverts current snap state
-        const snapped = !snapActive
+        let snapped = !snapActive
           ? cursorPosition
           : snapTo45Degrees(startingPoint.current, cursorPosition)
+
+        // Endpoint snap — has priority over grid/45° snap
+        // Include session start point so the user can close the room
+        const startSnapPoint: SnapPoint = {
+          x: startingPoint.current.x,
+          z: startingPoint.current.z,
+          isStartPoint: true,
+        }
+        const endpoints = getEndpoints(startSnapPoint)
+        const nearest = findNearestEndpoint(snapped, endpoints)
+
+        if (nearest) {
+          // Override position with exact endpoint
+          snapped = new Vector3(nearest.x, snapped.y, nearest.z)
+          setIsSnapping(true)
+          // Move snap ring to snap point
+          if (snapRingRef.current) {
+            snapRingRef.current.visible = true
+            snapRingRef.current.position.set(nearest.x, snapped.y + 0.01, nearest.z)
+          }
+        } else {
+          setIsSnapping(false)
+          if (snapRingRef.current) {
+            snapRingRef.current.visible = false
+          }
+        }
+
         endingPoint.current.copy(snapped)
 
         // Position the cursor at the end of the wall being drawn
@@ -159,6 +254,23 @@ export const WallTool: React.FC = () => {
         }
       } else {
         setWallLength(null)
+
+        // In idle state: show snap indicator when hovering over an existing endpoint
+        const endpoints = getEndpoints()
+        const nearest = findNearestEndpoint(cursorPosition, endpoints)
+        if (nearest) {
+          setIsSnapping(true)
+          if (snapRingRef.current) {
+            snapRingRef.current.visible = true
+            snapRingRef.current.position.set(nearest.x, cursorPosition.y + 0.01, nearest.z)
+          }
+        } else {
+          setIsSnapping(false)
+          if (snapRingRef.current) {
+            snapRingRef.current.visible = false
+          }
+        }
+
         // Not drawing a wall, just follow the grid position
         cursorRef.current.position.set(gridPosition[0], event.position[1], gridPosition[1])
       }
@@ -166,7 +278,18 @@ export const WallTool: React.FC = () => {
 
     const onGridClick = (event: GridEvent) => {
       if (buildingState.current === 0) {
-        startingPoint.current.set(gridPosition[0], event.position[1], gridPosition[1])
+        // Check if we should snap the start point to an existing endpoint
+        const rawPos = new Vector3(gridPosition[0], event.position[1], gridPosition[1])
+        const endpoints = getEndpoints()
+        const nearest = findNearestEndpoint(rawPos, endpoints)
+        if (nearest) {
+          startingPoint.current.set(nearest.x, event.position[1], nearest.z)
+          sfxEmitter.emit('sfx:grid-snap')
+        } else {
+          startingPoint.current.set(gridPosition[0], event.position[1], gridPosition[1])
+        }
+        // Invalidate endpoint cache so the new start session is fresh
+        lastNodesVersion = -1
         buildingState.current = 1
         wallPreviewRef.current.visible = true
       } else if (buildingState.current === 1) {
@@ -178,6 +301,11 @@ export const WallTool: React.FC = () => {
           [endingPoint.current.x, endingPoint.current.z],
         )
         wallPreviewRef.current.visible = false
+        // Hide snap ring after commit
+        if (snapRingRef.current) snapRingRef.current.visible = false
+        setIsSnapping(false)
+        // Invalidate cache so next wall pick up fresh endpoints
+        lastNodesVersion = -1
         buildingState.current = 0
       }
     }
@@ -200,7 +328,9 @@ export const WallTool: React.FC = () => {
       if (buildingState.current === 1) {
         buildingState.current = 0
         wallPreviewRef.current.visible = false
+        if (snapRingRef.current) snapRingRef.current.visible = false
         setWallLength(null)
+        setIsSnapping(false)
       }
     }
 
@@ -221,8 +351,20 @@ export const WallTool: React.FC = () => {
 
   return (
     <group>
-      {/* Cursor indicator */}
-      <CursorSphere ref={cursorRef}  />
+      {/* Cursor indicator — green when snapping to an endpoint */}
+      <CursorSphere ref={cursorRef} color={isSnapping ? '#22c55e' : '#818cf8'} />
+
+      {/* Snap ring indicator — shown around the snap target point */}
+      <mesh ref={snapRingRef} visible={false} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
+        <ringGeometry args={[0.18, 0.28, 48]} />
+        <meshBasicNodeMaterial
+          color="#22c55e"
+          transparent
+          opacity={0.85}
+          depthTest={false}
+          depthWrite={false}
+        />
+      </mesh>
 
       {/* Längen-Label */}
       {wallLength !== null && (
