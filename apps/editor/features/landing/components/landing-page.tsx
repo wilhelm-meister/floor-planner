@@ -115,7 +115,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="relative bg-stone-900 pt-24 pb-32 px-6 overflow-hidden">
+      <section className="relative bg-stone-900 min-h-screen flex items-center px-6 overflow-hidden">
         {/* Fullscreen video background */}
         <video
           className="absolute inset-0 w-full h-full object-cover"
@@ -125,10 +125,10 @@ export default function LandingPage() {
           loop
           playsInline
         />
-        {/* Dark overlay so text stays readable */}
-        <div className="absolute inset-0 bg-black/60" />
+        {/* Cinematic gradient overlay — vignette from bottom, lighter at top to let video breathe */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/75" />
 
-        <div className="relative container mx-auto max-w-5xl text-center">
+        <div className="relative container mx-auto max-w-5xl text-center py-32">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/60 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
@@ -139,7 +139,7 @@ export default function LandingPage() {
           <h1 className="font-[family-name:var(--font-lora)] text-5xl sm:text-6xl md:text-7xl font-bold leading-tight tracking-tight text-white mb-6">
             Design your home.
             <br />
-            <span className="text-white/50 italic">In 3D.</span>
+            <span className="text-white/75 italic">In 3D.</span>
           </h1>
 
           {/* Subline */}
