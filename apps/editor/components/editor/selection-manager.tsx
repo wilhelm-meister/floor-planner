@@ -273,8 +273,12 @@ export const SelectionManager = () => {
 
     const onGridClick = () => {
       if (clickHandledRef.current) return;
+      // Don't deselect zones when clicking empty space in zone mode
+      // — zones represent room areas, deselecting on empty clicks is unintuitive
+      const { phase, structureLayer } = useEditor.getState();
+      if (phase === "structure" && structureLayer === "zones") return;
       console.log("onGridClick triggered! Deselecting.");
-      const activeStrategy = SELECTION_STRATEGIES[useEditor.getState().phase];
+      const activeStrategy = SELECTION_STRATEGIES[phase];
       if (activeStrategy) activeStrategy.handleDeselect();
     };
     emitter.on("grid:click", onGridClick);
