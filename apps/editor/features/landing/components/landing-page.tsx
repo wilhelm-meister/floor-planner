@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Lora } from 'next/font/google'
-import { PenLine, Box, Share2, Layers, Armchair, Lightbulb, DoorOpen, Building2, Link } from 'lucide-react'
+import { PenLine, Box, Share2, Layers, Sofa, Lightbulb, DoorOpen, Building2, Link2 } from 'lucide-react'
 import { getPublicProjects } from '../../community/lib/projects/actions'
 import type { Project } from '../../community/lib/projects/types'
 import { SignInDialog } from '../../community/components/sign-in-dialog'
@@ -23,7 +23,7 @@ const FEATURES: { icon: React.ComponentType<{ className?: string }>; title: stri
     desc: 'Draw walls and import floor plans with precision',
   },
   {
-    icon: Armchair,
+    icon: Sofa,
     title: 'Furniture & Objects',
     desc: 'Place hundreds of 3D items from the built-in catalog',
   },
@@ -43,7 +43,7 @@ const FEATURES: { icon: React.ComponentType<{ className?: string }>; title: stri
     desc: 'Design full buildings with multiple floors',
   },
   {
-    icon: Link,
+    icon: Link2,
     title: 'Share Anywhere',
     desc: 'Share a direct link — no login required to view',
   },
@@ -133,7 +133,7 @@ export default function LandingPage() {
           >
             Design your home.
             <br />
-            <span className="text-stone-700">In 3D.</span>
+            <span className="text-stone-500 italic">In 3D.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-stone-600 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -168,13 +168,10 @@ export default function LandingPage() {
           {/* Hero mockup */}
           <div className="relative mx-auto max-w-4xl">
             <div className="bg-stone-200 rounded-2xl aspect-[16/9] flex items-center justify-center overflow-hidden">
-              <Image
-                src="/pascal-logo-full.svg"
-                alt="Wilhelm Editor Preview"
-                width={200}
-                height={60}
-                className="opacity-30"
-              />
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-stone-400">
+                <Box className="w-12 h-12 opacity-30" />
+                <span className="text-sm font-medium opacity-50">3D Editor Preview</span>
+              </div>
             </div>
           </div>
         </div>
@@ -230,7 +227,7 @@ export default function LandingPage() {
               return (
                 <div
                   key={feature.title}
-                  className="bg-white rounded-2xl p-6 border border-stone-100"
+                  className="bg-white rounded-2xl p-6 border border-stone-100 hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default"
                 >
                   <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-stone-700" />
@@ -303,17 +300,17 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA SECTION ─────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-stone-100">
+      <section className="py-24 px-6 bg-stone-900">
         <div className="container mx-auto max-w-2xl text-center">
-          <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-stone-900 mb-4">
+          <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-white mb-4">
             Ready to start?
           </h2>
-          <p className="text-stone-600 text-lg mb-10">
+          <p className="text-stone-400 text-lg mb-10">
             Free, no installation required, runs entirely in your browser.
           </p>
           <button
             onClick={() => router.push('/editor/demo')}
-            className="bg-black text-white font-semibold px-10 py-4 rounded-xl text-lg hover:bg-black/80 transition-colors"
+            className="bg-white text-stone-900 font-semibold px-10 py-4 rounded-xl text-lg hover:bg-stone-100 transition-colors"
           >
             Start designing
           </button>
