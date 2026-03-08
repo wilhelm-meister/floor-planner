@@ -151,7 +151,7 @@ const GUIDES = [
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
   { label: 'How it works', href: '#how-it-works' },
-  { label: 'Community', href: '/community' },
+  { label: 'Community', href: '/' },
   { label: 'Guides', href: '/guides' },
 ]
 
@@ -596,7 +596,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-3">
               <span className="text-white text-sm font-semibold mb-1">Product</span>
               <a href="/editor/demo" className="text-stone-400 text-sm hover:text-white transition-colors">Editor</a>
-              <a href="/community" className="text-stone-400 text-sm hover:text-white transition-colors">Community</a>
+              <a href="/" className="text-stone-400 text-sm hover:text-white transition-colors">Community</a>
               <a href="#" className="text-stone-400 text-sm hover:text-white transition-colors">Changelog</a>
               <a href="#" className="text-stone-400 text-sm hover:text-white transition-colors">Roadmap</a>
             </div>
