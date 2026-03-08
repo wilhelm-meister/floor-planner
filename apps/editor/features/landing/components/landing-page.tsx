@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Lora } from 'next/font/google'
-import { PenLine, Box, Share2 } from 'lucide-react'
+import { PenLine, Box, Share2, Layers, Armchair, Lightbulb, DoorOpen, Building2, Link } from 'lucide-react'
 import { getPublicProjects } from '../../community/lib/projects/actions'
 import type { Project } from '../../community/lib/projects/types'
 import { SignInDialog } from '../../community/components/sign-in-dialog'
@@ -16,36 +16,36 @@ const lora = Lora({
   display: 'swap',
 })
 
-const FEATURES = [
+const FEATURES: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[] = [
   {
-    emoji: '🧱',
-    title: 'Wände & Räume',
-    desc: 'Wände zeichnen, Grundrisse importieren',
+    icon: Layers,
+    title: 'Walls & Rooms',
+    desc: 'Draw walls and import floor plans with precision',
   },
   {
-    emoji: '🪑',
-    title: 'Möbel & Einrichtung',
-    desc: 'Hunderte 3D-Objekte aus dem Katalog',
+    icon: Armchair,
+    title: 'Furniture & Objects',
+    desc: 'Place hundreds of 3D items from the built-in catalog',
   },
   {
-    emoji: '💡',
-    title: 'Licht & Zonen',
-    desc: 'Beleuchtung und Raumzonen definieren',
+    icon: Lightbulb,
+    title: 'Lighting & Zones',
+    desc: 'Define room zones and lighting conditions',
   },
   {
-    emoji: '🚪',
-    title: 'Türen & Fenster',
-    desc: 'Präzise platziert und anpassbar',
+    icon: DoorOpen,
+    title: 'Doors & Windows',
+    desc: 'Snap doors and windows to walls with one click',
   },
   {
-    emoji: '🏠',
-    title: 'Mehrgeschossig',
-    desc: 'Mehrere Ebenen, vollständige Gebäude',
+    icon: Building2,
+    title: 'Multi-Level',
+    desc: 'Design full buildings with multiple floors',
   },
   {
-    emoji: '🔗',
-    title: 'Teilen',
-    desc: 'Direktlink zu deinem Projekt, kein Login nötig zum Betrachten',
+    icon: Link,
+    title: 'Share Anywhere',
+    desc: 'Share a direct link — no login required to view',
   },
 ]
 
@@ -53,20 +53,20 @@ const STEPS = [
   {
     number: '01',
     icon: PenLine,
-    title: 'Grundriss zeichnen',
-    desc: 'Wände, Türen, Fenster in Minuten platzieren',
+    title: 'Draw your floor plan',
+    desc: 'Place walls, doors, and windows in minutes',
   },
   {
     number: '02',
     icon: Box,
-    title: 'In 3D visualisieren',
-    desc: 'Dein Gebäude live in 3D sehen und begehen',
+    title: 'Visualize in 3D',
+    desc: 'Walk through your building in real time',
   },
   {
     number: '03',
     icon: Share2,
-    title: 'Teilen & Exportieren',
-    desc: 'Projekte teilen oder als PDF/Bild exportieren',
+    title: 'Share & Export',
+    desc: 'Share your project or export as image',
   },
 ]
 
@@ -137,8 +137,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-stone-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Wilhelm Editor ist der kostenlose 3D-Grundriss-Editor. Zeichne Wände,
-            platziere Möbel, teile dein Projekt.
+            The free, open-source 3D floor plan editor. Draw walls, place furniture, share your vision.
           </p>
 
           {/* CTAs */}
@@ -147,13 +146,13 @@ export default function LandingPage() {
               onClick={() => router.push('/editor/demo')}
               className="bg-black text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-black/80 transition-colors w-full sm:w-auto"
             >
-              Jetzt starten
+              Start designing
             </button>
             <button
               onClick={() => router.push('/viewer/demo')}
               className="border border-black text-black font-semibold px-8 py-3.5 rounded-xl hover:bg-black/5 transition-colors w-full sm:w-auto"
             >
-              Demo ansehen
+              View demo
             </button>
           </div>
 
@@ -161,9 +160,9 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-6 text-sm text-stone-500 mb-16">
             <span>Open Source</span>
             <span className="text-stone-300">|</span>
-            <span>Kostenlos</span>
+            <span>Free Forever</span>
             <span className="text-stone-300">|</span>
-            <span>Läuft im Browser</span>
+            <span>Runs in the Browser</span>
           </div>
 
           {/* Hero mockup */}
@@ -185,10 +184,10 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-white">
         <div className="container mx-auto max-w-5xl">
           <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-stone-900 text-center mb-4">
-            So einfach geht's
+            How it works
           </h2>
           <p className="text-stone-500 text-center mb-16 text-lg">
-            In drei Schritten zum fertigen 3D-Grundriss
+            From blank canvas to finished floor plan in three steps
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -219,23 +218,28 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-stone-50">
         <div className="container mx-auto max-w-5xl">
           <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-stone-900 text-center mb-4">
-            Alles was du brauchst
+            Everything you need
           </h2>
           <p className="text-stone-500 text-center mb-16 text-lg">
-            Professionelle Werkzeuge, komplett kostenlos
+            Professional tools, completely free
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-white rounded-2xl p-6 border border-stone-100"
-              >
-                <span className="text-3xl mb-4 block">{feature.emoji}</span>
-                <h3 className="font-semibold text-stone-900 mb-2">{feature.title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
+            {FEATURES.map((feature) => {
+              const Icon = feature.icon
+              return (
+                <div
+                  key={feature.title}
+                  className="bg-white rounded-2xl p-6 border border-stone-100"
+                >
+                  <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-stone-700" />
+                  </div>
+                  <h3 className="font-semibold text-stone-900 mb-2">{feature.title}</h3>
+                  <p className="text-stone-500 text-sm leading-relaxed">{feature.desc}</p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -244,10 +248,10 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-white">
         <div className="container mx-auto max-w-5xl">
           <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-stone-900 text-center mb-4">
-            Projekte aus der Community
+            Community Projects
           </h2>
           <p className="text-stone-500 text-center mb-16 text-lg">
-            Lass dich von echten Projekten inspirieren
+            Get inspired by what others have built
           </p>
 
           {loadingProjects ? (
@@ -273,7 +277,7 @@ export default function LandingPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-stone-400 text-sm">
-                        Keine Vorschau
+                        No preview
                       </div>
                     )}
                   </div>
@@ -302,16 +306,16 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-stone-100">
         <div className="container mx-auto max-w-2xl text-center">
           <h2 className="font-[family-name:var(--font-lora)] text-4xl font-bold text-stone-900 mb-4">
-            Bereit anzufangen?
+            Ready to start?
           </h2>
           <p className="text-stone-600 text-lg mb-10">
-            Kostenlos, keine Installation, läuft im Browser.
+            Free, no installation required, runs entirely in your browser.
           </p>
           <button
             onClick={() => router.push('/editor/demo')}
             className="bg-black text-white font-semibold px-10 py-4 rounded-xl text-lg hover:bg-black/80 transition-colors"
           >
-            Jetzt loslegen
+            Start designing
           </button>
         </div>
       </section>
