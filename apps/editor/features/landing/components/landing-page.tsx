@@ -116,14 +116,17 @@ export default function LandingPage() {
 
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="relative bg-stone-900 pt-24 pb-32 px-6 overflow-hidden">
-        {/* Subtle grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
+        {/* Fullscreen video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src="https://unreal.house/wp-content/uploads/2024/07/unreal-engine-5-real-estate-configurator.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
         />
+        {/* Dark overlay so text stays readable */}
+        <div className="absolute inset-0 bg-black/60" />
 
         <div className="relative container mx-auto max-w-5xl text-center">
           {/* Badge */}
@@ -160,22 +163,7 @@ export default function LandingPage() {
             </button>
           </div>
 
-          {/* App Mockup */}
-          <div className="relative mx-auto max-w-4xl">
-            {/* Glow effect */}
-            <div className="absolute -inset-4 bg-white/5 rounded-3xl blur-xl" />
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-              <Image
-                src="https://unreal.house/wp-content/uploads/2024/07/unreal-engine-configurator-architecture.webp"
-                alt="3D Floor Planner – unreal.house"
-                width={1200}
-                height={675}
-                className="w-full h-auto"
-                priority
-                unoptimized
-              />
-            </div>
-          </div>
+
         </div>
       </section>
 
