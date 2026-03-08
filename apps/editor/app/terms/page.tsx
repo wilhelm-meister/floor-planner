@@ -141,7 +141,7 @@ export default function TermsPage() {
           <section className="space-y-4 mb-8">
             <h2 className="text-xl font-semibold">9. Limitation of Liability</h2>
             <p className="text-foreground/90 leading-relaxed">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, PASCAL GROUP INC. SHALL NOT BE LIABLE
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, WILHELM MEISTER SHALL NOT BE LIABLE
               FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES,
               INCLUDING LOSS OF DATA, PROFITS, OR GOODWILL, ARISING FROM YOUR USE OF THE
               PLATFORM.
