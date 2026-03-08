@@ -97,7 +97,9 @@ const SELECTION_STRATEGIES: Record<string, SelectionStrategy> = {
       const buildingId = resolveBuildingId(nodeLevelId, nodes);
 
       const updates: any = {};
-      if (nodeLevelId !== "default" && nodeLevelId !== selection.levelId) {
+      // Never auto-switch to another level when a level is already selected —
+      // elements from other levels should not be selectable or editable
+      if (nodeLevelId !== "default" && nodeLevelId !== selection.levelId && !selection.levelId) {
         updates.levelId = nodeLevelId;
       }
       if (buildingId && buildingId !== selection.buildingId) {
@@ -330,6 +332,11 @@ export const SelectionManager = () => {
       const currentPhase = useEditor.getState().phase;
       
       let targetPhase: "site" | "structure" | "furnish" | null = null;
+
+      // Don't allow double-clicking elements from other levels
+      if (currentPhase === "structure" || currentPhase === "furnish") {
+        if (!isNodeInCurrentLevel(node)) return;
+      }
 
       if (node.type === "building" || node.type === "site") {
         if (currentPhase === "structure" || currentPhase === "furnish") {
