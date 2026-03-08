@@ -3,12 +3,12 @@ import useEditor from '@/store/use-editor'
 import { useDraftNode } from './use-draft-node'
 import { usePlacementCoordinator } from './use-placement-coordinator'
 
-export const ItemTool: React.FC = () => {
-  const selectedItem = useEditor((state) => state.selectedItem)
+/**
+ * Inner component that renders when an item IS selected.
+ * Separated so hooks are always called unconditionally.
+ */
+const ItemToolInner: React.FC<{ selectedItem: NonNullable<ReturnType<typeof useEditor.getState>['selectedItem']> }> = ({ selectedItem }) => {
   const draftNode = useDraftNode()
-
-  // Don't render anything if no item is selected
-  if (!selectedItem) return null
 
   const cursor = usePlacementCoordinator({
     asset: selectedItem,
@@ -25,4 +25,12 @@ export const ItemTool: React.FC = () => {
   })
 
   return <>{cursor}</>
+}
+
+export const ItemTool: React.FC = () => {
+  const selectedItem = useEditor((state) => state.selectedItem)
+
+  if (!selectedItem) return null
+
+  return <ItemToolInner key={selectedItem.name} selectedItem={selectedItem} />
 }
