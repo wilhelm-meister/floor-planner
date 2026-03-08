@@ -164,11 +164,16 @@ export default function LandingPage() {
           <div className="relative mx-auto max-w-4xl">
             {/* Glow effect */}
             <div className="absolute -inset-4 bg-white/5 rounded-3xl blur-xl" />
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[16/9] bg-stone-800 flex items-center justify-center">
-              <Box className="w-16 h-16 text-white/10" />
-              {/* Replace with real screenshot later:
-              <Image src="/editor-screenshot.png" alt="Wilhelm Editor" fill className="object-cover" priority />
-              */}
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+              <Image
+                src="https://unreal.house/wp-content/uploads/2024/07/unreal-engine-configurator-architecture.webp"
+                alt="3D Floor Planner – unreal.house"
+                width={1200}
+                height={675}
+                className="w-full h-auto"
+                priority
+                unoptimized
+              />
             </div>
           </div>
         </div>
