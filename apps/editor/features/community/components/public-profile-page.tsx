@@ -56,12 +56,12 @@ export function PublicProfilePage({ profile, projects }: PublicProfilePageProps)
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/pascal-logo-shape.svg"
-                alt="Pascal"
+                alt="Wilhelm"
                 width={64}
                 height={64}
                 className="h-5 w-5"
               />
-              <span className="text-2xl font-bold">Pascal Editor</span>
+              <span className="text-2xl font-bold">Wilhelm Editor</span>
             </Link>
             <a
               href="https://github.com/pascalorg/editor"

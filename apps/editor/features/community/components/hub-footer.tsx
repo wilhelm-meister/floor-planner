@@ -30,7 +30,7 @@ export function HubFooter() {
               rel="noopener noreferrer"
               className="text-foreground hover:underline"
             >
-              Pascal
+              Wilhelm
             </a>
           </p>
           <div className="flex items-center gap-4">

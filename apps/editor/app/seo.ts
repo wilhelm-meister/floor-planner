@@ -1,14 +1,14 @@
 import { BASE_URL } from '@/lib/utils'
 
 export const siteConfig = {
-  name: 'Pascal Editor',
+  name: 'Wilhelm Editor',
   description:
-    'Pascal Editor is an open-source 3D building editor for designing, editing, and sharing home projects.',
+    'Wilhelm Editor is an open-source 3D building editor for designing, editing, and sharing home projects.',
   url: BASE_URL,
   website: 'editor.pascal.app',
   ogImage: '/og',
   keywords: [
-    'Pascal Editor',
+    'Wilhelm Editor',
     'open-source 3D editor',
     '3D building editor',
     'home design software',

@@ -8,7 +8,7 @@ import { SettingsPage } from '@/features/community/components/settings-page'
 
 export const metadata: Metadata = {
   title: 'Account Settings',
-  description: 'Manage your Pascal Editor account profile and connected providers.',
+  description: 'Manage your Wilhelm Editor account profile and connected providers.',
   robots: {
     index: false,
     follow: false,

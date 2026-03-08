@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Project Viewer',
-  description: 'View and share 3D projects built with Pascal Editor.',
+  description: 'View and share 3D projects built with Wilhelm Editor.',
 }
 
 export default function ViewerLayout({

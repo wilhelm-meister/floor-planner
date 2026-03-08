@@ -54,14 +54,14 @@ export function IconRail({
           >
             <Image
               src="/pascal-logo-shape.svg"
-              alt="Pascal"
+              alt="Wilhelm"
               width={24}
               height={24}
               className="h-6 w-6 dark:invert"
             />
           </Link>
         </TooltipTrigger>
-        <TooltipContent side="right">Back to Pascal Editor</TooltipContent>
+        <TooltipContent side="right">Back to Wilhelm Editor</TooltipContent>
       </Tooltip>
 
       {/* Divider */}

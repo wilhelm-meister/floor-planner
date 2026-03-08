@@ -26,7 +26,7 @@ async function loadFonts() {
   return { sans: sansFont, jakarta: jakartaFont }
 }
 
-function PascalLogo({ color = '#fff', size = 100 }: { color?: string; size?: number }) {
+function WilhelmLogo({ color = '#fff', size = 100 }: { color?: string; size?: number }) {
   return (
     <svg fill="none" height={size} style={{ display: 'flex' }} viewBox="0 0 100 100" width={size}>
       <rect fill={color} height="40" width="20" y="60" />
@@ -65,7 +65,7 @@ export async function GET(req: Request) {
         {showLargeLogo ? (
           <div tw="flex flex-col flex-1 py-10 px-12 h-full justify-center">
             <div style={{ display: 'flex', marginBottom: 24 }}>
-              <PascalLogo color={logoColor} size={80} />
+              <WilhelmLogo color={logoColor} size={80} />
             </div>
             <div
               style={{
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
                 display: 'flex',
               }}
             >
-              Pascal Editor
+              Wilhelm Editor
             </div>
             <div
               style={{
@@ -96,7 +96,7 @@ export async function GET(req: Request) {
         ) : (
           <div tw="flex flex-col flex-1 py-10 px-12 h-full">
             <div style={{ display: 'flex', marginBottom: 24 }}>
-              <PascalLogo color={logoColor} size={40} />
+              <WilhelmLogo color={logoColor} size={40} />
             </div>
             <div
               style={{

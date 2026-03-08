@@ -4,7 +4,7 @@ import CommunityHub from '@/features/community/components/community-hub'
 export const metadata: Metadata = {
   title: 'Community Projects',
   description:
-    'Create and share 3D home projects with Pascal Editor, the open-source building editor.',
+    'Create and share 3D home projects with Wilhelm Editor, the open-source building editor.',
 }
 
 export default function Home() {

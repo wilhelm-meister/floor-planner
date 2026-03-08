@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Editor Workspace',
-  description: 'Edit your Pascal projects in a full 3D workspace.',
+  description: 'Edit your Wilhelm projects in a full 3D workspace.',
   robots: {
     index: false,
     follow: false,

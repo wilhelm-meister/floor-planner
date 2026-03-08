@@ -75,12 +75,12 @@ export default function CommunityHub() {
             <div className="flex items-center gap-2">
               <Image
                 src="/pascal-logo-shape.svg"
-                alt="Pascal"
+                alt="Wilhelm"
                 width={64}
                 height={64}
                 className="h-5 w-5"
               />
-              <h1 className="text-2xl font-bold">Pascal Editor</h1>
+              <h1 className="text-2xl font-bold">Wilhelm Editor</h1>
             </div>
             <div className="flex items-center gap-3">
               <a
@@ -145,7 +145,7 @@ export default function CommunityHub() {
         {/* CTA — direkt in den Editor, kein Login nötig */}
         {!isAuthenticated && (
           <section className="rounded-2xl border border-border bg-neutral-50 dark:bg-neutral-900/50 px-8 py-12 text-center">
-            <h2 className="text-2xl font-semibold mb-2">Build with Pascal</h2>
+            <h2 className="text-2xl font-semibold mb-2">Build with Wilhelm</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Create and visualize 3D architectural projects — no account needed.
             </p>

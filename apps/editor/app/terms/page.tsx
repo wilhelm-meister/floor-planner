@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
-  description: 'Terms of Service for Pascal Editor and the Pascal platform.',
+  description: 'Terms of Service for Wilhelm Editor and the Wilhelm platform.',
 }
 
 export default function TermsPage() {
@@ -41,8 +41,8 @@ export default function TermsPage() {
           <section className="space-y-4 mb-8">
             <h2 className="text-xl font-semibold">1. Introduction</h2>
             <p className="text-foreground/90 leading-relaxed">
-              Welcome to Pascal Editor (&quot;Editor&quot;) and the Pascal platform at pascal.app
-              (&quot;Platform&quot;), operated by Pascal Group Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;).
+              Welcome to Wilhelm Editor (&quot;Editor&quot;) and the Wilhelm platform at pascal.app
+              (&quot;Platform&quot;), operated by Wilhelm Meister (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;).
               By accessing or using our services, you agree to these Terms of Service.
             </p>
           </section>
@@ -50,14 +50,14 @@ export default function TermsPage() {
           <section className="space-y-4 mb-8">
             <h2 className="text-xl font-semibold">2. The Editor and Platform</h2>
             <p className="text-foreground/90 leading-relaxed">
-              The Pascal Editor is open-source software released under the MIT License.
+              The Wilhelm Editor is open-source software released under the MIT License.
               You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell
               copies of the Editor software in accordance with the MIT License terms.
             </p>
             <p className="text-foreground/90 leading-relaxed">
-              The Pascal platform (pascal.app) and its associated services, including user accounts,
+              The Wilhelm platform (pascal.app) and its associated services, including user accounts,
               cloud storage, and project hosting, are proprietary services owned and operated by
-              Pascal Group Inc. These Terms govern your use of the Platform.
+              Wilhelm Meister. These Terms govern your use of the Platform.
             </p>
           </section>
 
@@ -103,7 +103,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold">6. Platform Ownership</h2>
             <p className="text-foreground/90 leading-relaxed">
               The Platform, including its design, features, and proprietary code, is owned by
-              Pascal Group Inc. and protected by intellectual property laws. While the Editor
+              Wilhelm Meister and protected by intellectual property laws. While the Editor
               source code is open-source under the MIT License, the Platform services, branding,
               and infrastructure remain our proprietary property.
             </p>
@@ -141,7 +141,7 @@ export default function TermsPage() {
           <section className="space-y-4 mb-8">
             <h2 className="text-xl font-semibold">9. Limitation of Liability</h2>
             <p className="text-foreground/90 leading-relaxed">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, PASCAL GROUP INC. SHALL NOT BE LIABLE
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, WILHELM MEISTER SHALL NOT BE LIABLE
               FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES,
               INCLUDING LOSS OF DATA, PROFITS, OR GOODWILL, ARISING FROM YOUR USE OF THE
               PLATFORM.
