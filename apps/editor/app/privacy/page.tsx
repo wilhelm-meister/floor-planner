@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy Policy for Pascal Editor and the Pascal platform.',
+  description: 'Privacy Policy for Wilhelm Editor and the Wilhelm platform.',
 }
 
 export default function PrivacyPage() {
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
           <section className="space-y-4 mb-8">
             <h2 className="text-xl font-semibold">1. Introduction</h2>
             <p className="text-foreground/90 leading-relaxed">
-              Pascal Group Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the Pascal Editor and
+              Wilhelm Meister (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the Wilhelm Editor and
               Platform at pascal.app. This Privacy Policy explains how we collect, use, and
               protect your information when you use our services.
             </p>

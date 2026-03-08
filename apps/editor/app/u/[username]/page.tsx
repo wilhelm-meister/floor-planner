@@ -15,7 +15,7 @@ export async function generateMetadata({
 
   return {
     title: `${username}'s Projects`,
-    description: `Public projects shared by @${username} on Pascal Editor.`,
+    description: `Public projects shared by @${username} on Wilhelm Editor.`,
     alternates: {
       canonical: `/u/${encodeURIComponent(username)}`,
     },
