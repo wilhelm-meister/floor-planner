@@ -355,7 +355,7 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
             }}
           >
             <cylinderGeometry args={[radius, radius, height, 16]} />
-            <meshStandardMaterial
+            <meshStandardNodeMaterial
               color={isDragging ? '#22c55e' : isHovered ? '#60a5fa' : '#3b82f6'}
             />
           </mesh>
@@ -381,7 +381,7 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
           onClick={(e) => { if (e.button !== 0) return; e.stopPropagation() }}
         >
           <cylinderGeometry args={[0.18, 0.18, 0.06, 24]} />
-          <meshStandardMaterial color={hoveredCenter ? '#f59e0b' : '#fbbf24'} />
+          <meshStandardNodeMaterial color={hoveredCenter ? '#f59e0b' : '#fbbf24'} />
         </mesh>
       )}
 
@@ -424,7 +424,7 @@ export const PolygonEditor: React.FC<PolygonEditorProps> = ({
               }}
             >
               <cylinderGeometry args={[radius, radius, height, 16]} />
-              <meshStandardMaterial
+              <meshStandardNodeMaterial
                 color={isHovered ? '#4ade80' : '#22c55e'}
                 transparent
                 opacity={isHovered ? 1 : 0.7}

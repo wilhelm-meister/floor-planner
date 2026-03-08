@@ -238,7 +238,7 @@ export const WallTool: React.FC = () => {
       {/* Wall preview */}
       <mesh ref={wallPreviewRef} visible={false} renderOrder={1}>
         <shapeGeometry />
-        <meshBasicMaterial
+        <meshBasicNodeMaterial
           color="#818cf8"
           transparent
           opacity={0.5}

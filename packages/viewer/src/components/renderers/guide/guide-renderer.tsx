@@ -1,7 +1,8 @@
 import { type AnyNodeId, type GuideNode, useRegistry, useScene } from '@pascal-app/core'
 import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DoubleSide, MeshBasicMaterial, Plane, Raycaster, type Group, type Texture, TextureLoader, Vector2, Vector3 } from 'three'
+import { DoubleSide, Plane, Raycaster, type Group, type Texture, TextureLoader, Vector2, Vector3 } from 'three'
+import { MeshBasicNodeMaterial } from 'three/webgpu'
 import { applySnap } from '../../../lib/snap'
 import { useAssetUrl } from '../../../hooks/use-asset-url'
 import useViewer from '../../../store/use-viewer'
@@ -37,18 +38,26 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
   useEffect(() => {
     if (!resolvedUrl) return
     let cancelled = false
+    let loadedTex: Texture | null = null
     const img = new Image()
     img.onload = () => {
       if (cancelled) return
       const loader = new TextureLoader()
       loader.load(resolvedUrl, (t) => {
-        if (cancelled) return
+        if (cancelled) {
+          t.dispose()
+          return
+        }
+        loadedTex = t
         setAspect(img.naturalWidth / img.naturalHeight || 1)
         setTex(t)
       })
     }
     img.src = resolvedUrl
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      loadedTex?.dispose()
+    }
   }, [resolvedUrl])
 
   const planeW = 10 * node.scale
@@ -56,7 +65,7 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
 
   const material = useMemo(() => {
     if (!tex) return null
-    return new MeshBasicMaterial({
+    const mat = new MeshBasicNodeMaterial({
       map: tex,
       transparent: true,
       opacity: node.opacity / 100,
@@ -64,7 +73,15 @@ export const GuideRenderer = ({ node }: { node: GuideNode }) => {
       depthTest: false,
       depthWrite: false,
     })
+    return mat
   }, [tex, node.opacity])
+
+  // Dispose material when it changes (tex or opacity change creates a new one)
+  useEffect(() => {
+    return () => {
+      material?.dispose()
+    }
+  }, [material])
 
   const getWorldPos = useCallback((e: PointerEvent) => {
     const rect = gl.domElement.getBoundingClientRect()

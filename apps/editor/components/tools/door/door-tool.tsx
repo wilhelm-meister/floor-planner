@@ -8,7 +8,7 @@ import {
   type WallEvent,
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { BoxGeometry, EdgesGeometry, type Group, type LineSegments } from 'three'
 import { LineBasicNodeMaterial } from 'three/webgpu'
 import {
@@ -274,9 +274,16 @@ export const DoorTool: React.FC = () => {
   }, [])
 
   // Cursor geometry: door outline (default 0.9 × 2.1 × 0.07)
-  const boxGeo = new BoxGeometry(0.9, 2.1, 0.07)
-  const edgesGeo = new EdgesGeometry(boxGeo)
-  boxGeo.dispose()
+  const edgesGeo = useMemo(() => {
+    const boxGeo = new BoxGeometry(0.9, 2.1, 0.07)
+    const geo = new EdgesGeometry(boxGeo)
+    boxGeo.dispose()
+    return geo
+  }, [])
+
+  useEffect(() => {
+    return () => { edgesGeo.dispose() }
+  }, [edgesGeo])
 
   return (
     <group ref={cursorGroupRef} visible={false}>

@@ -297,7 +297,7 @@ export const CeilingTool: React.FC = () => {
       {/* Grid-level cursor indicator */}
       <mesh ref={gridCursorRef} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
         <ringGeometry args={[0.15, 0.2, 32]} />
-        <meshBasicMaterial color="#818cf8" side={DoubleSide} depthTest={false} depthWrite={true} opacity={0.5} transparent />
+        <meshBasicNodeMaterial color="#818cf8" side={DoubleSide} depthTest={false} depthWrite={true} opacity={0.5} transparent />
       </mesh>
 
       {/* Vertical connector: local y=0 at grid, y=H at ceiling; position.y set to gridY on move */}
@@ -314,7 +314,7 @@ export const CeilingTool: React.FC = () => {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <shapeGeometry args={[previewShape]} />
-          <meshBasicMaterial
+          <meshBasicNodeMaterial
             color="#818cf8"
             depthTest={false}
             opacity={0.15}
@@ -332,7 +332,7 @@ export const CeilingTool: React.FC = () => {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <shapeGeometry args={[previewShape]} />
-          <meshBasicMaterial
+          <meshBasicNodeMaterial
             color="#818cf8"
             depthTest={false}
             opacity={0.1}

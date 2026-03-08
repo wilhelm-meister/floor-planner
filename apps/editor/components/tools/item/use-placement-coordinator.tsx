@@ -16,7 +16,7 @@ import {
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   BoxGeometry,
   EdgesGeometry,
@@ -659,6 +659,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
     const boxGeometry = new BoxGeometry(dims[0], dims[1], dims[2])
     boxGeometry.translate(0, dims[1] / 2, 0)
     const edgesGeometry = new EdgesGeometry(boxGeometry)
+    boxGeometry.dispose()
     edgesRef.current.geometry = edgesGeometry
 
     // ---- Subscribe ----
@@ -681,6 +682,7 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
     return () => {
       draftNode.destroy()
       useScene.temporal.getState().resume()
+      edgesGeometry.dispose()
       emitter.off('grid:move', onGridMove)
       emitter.off('grid:click', onGridClick)
       emitter.off('item:enter', onItemEnter)
@@ -754,13 +756,29 @@ export function usePlacementCoordinator(config: PlacementCoordinatorConfig): Rea
 
   const initialDraft = draftNode.current
   const dims = initialDraft ? getScaledDimensions(initialDraft) : (config.asset.dimensions ?? DEFAULT_DIMENSIONS)
-  const initialBoxGeometry = new BoxGeometry(dims[0], dims[1], dims[2])
-  initialBoxGeometry.translate(0, dims[1] / 2, 0)
+
+  const initialBoxGeometry = useMemo(() => {
+    const geo = new BoxGeometry(dims[0], dims[1], dims[2])
+    geo.translate(0, dims[1] / 2, 0)
+    return geo
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dims[0], dims[1], dims[2]])
 
   // Base plane geometry (colored rectangle on the ground)
-  const basePlaneGeometry = new PlaneGeometry(dims[0], dims[2])
-  basePlaneGeometry.rotateX(-Math.PI / 2) // Make it horizontal
-  basePlaneGeometry.translate(0, 0.01, 0) // Slightly above ground to avoid z-fighting
+  const basePlaneGeometry = useMemo(() => {
+    const geo = new PlaneGeometry(dims[0], dims[2])
+    geo.rotateX(-Math.PI / 2) // Make it horizontal
+    geo.translate(0, 0.01, 0) // Slightly above ground to avoid z-fighting
+    return geo
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dims[0], dims[2]])
+
+  useEffect(() => {
+    return () => {
+      initialBoxGeometry.dispose()
+      basePlaneGeometry.dispose()
+    }
+  }, [initialBoxGeometry, basePlaneGeometry])
 
   return (
     <group ref={cursorGroupRef}>

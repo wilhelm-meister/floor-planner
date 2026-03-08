@@ -64,7 +64,7 @@ export const GroundOccluder = () => {
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={-0.05}>
       <shapeGeometry args={[shape]} />
-      <meshBasicMaterial 
+      <meshBasicNodeMaterial 
         color={bgColor} 
         depthWrite={true}
         polygonOffset={true}

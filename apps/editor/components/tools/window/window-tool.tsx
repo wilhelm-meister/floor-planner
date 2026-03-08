@@ -8,7 +8,7 @@ import {
   WindowNode,
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { BoxGeometry, EdgesGeometry, type Group, type LineSegments } from 'three'
 import { LineBasicNodeMaterial } from 'three/webgpu'
 import {
@@ -283,9 +283,16 @@ export const WindowTool: React.FC = () => {
   }, [])
 
   // Cursor geometry: window outline rectangle (width × height × frameDepth)
-  const boxGeo = new BoxGeometry(1.5, 1.5, 0.07)
-  const edgesGeo = new EdgesGeometry(boxGeo)
-  boxGeo.dispose()
+  const edgesGeo = useMemo(() => {
+    const boxGeo = new BoxGeometry(1.5, 1.5, 0.07)
+    const geo = new EdgesGeometry(boxGeo)
+    boxGeo.dispose()
+    return geo
+  }, [])
+
+  useEffect(() => {
+    return () => { edgesGeo.dispose() }
+  }, [edgesGeo])
 
   return (
     <group ref={cursorGroupRef} visible={false}>

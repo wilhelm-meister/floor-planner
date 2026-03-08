@@ -201,7 +201,7 @@ export const RoofTool: React.FC = () => {
       rotation={[-Math.PI / 2, 0, 0]}
     >
       <planeGeometry args={[preview.length, preview.width]} />
-      <meshBasicMaterial
+      <meshBasicNodeMaterial
         color="#818cf8"
         opacity={0.25}
         transparent

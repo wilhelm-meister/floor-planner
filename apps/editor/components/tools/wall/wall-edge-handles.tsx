@@ -199,7 +199,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           rotation={[0, -angle, 0]}
         >
           <boxGeometry args={[length, 0.012, 0.04]} />
-          <meshBasicMaterial
+          <meshBasicNodeMaterial
             color={highlightColor}
             transparent
             opacity={isDragging ? 1 : 0.85}
@@ -215,7 +215,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
           position={[startPos[0], levelY, startPos[1]]}
           rotation={[0, -angle, 0]}
         >
-          <meshBasicMaterial
+          <meshBasicNodeMaterial
             color="#818cf8"
             transparent
             opacity={0.35}
@@ -243,7 +243,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <sphereGeometry args={[HANDLE_RADIUS, 16, 16]} />
-        <meshStandardMaterial
+        <meshStandardNodeMaterial
           color={getHandleColor('start')}
           emissive={getHandleColor('start')}
           emissiveIntensity={dragTarget === 'start' ? 0.8 : 0.4}
@@ -269,7 +269,7 @@ export const WallEdgeHandles: React.FC<WallEdgeHandlesProps> = ({ wallId }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <sphereGeometry args={[HANDLE_RADIUS, 16, 16]} />
-        <meshStandardMaterial
+        <meshStandardNodeMaterial
           color={getHandleColor('end')}
           emissive={getHandleColor('end')}
           emissiveIntensity={dragTarget === 'end' ? 0.8 : 0.4}

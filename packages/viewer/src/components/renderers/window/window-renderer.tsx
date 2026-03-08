@@ -22,7 +22,7 @@ export const WindowRenderer = ({ node }: { node: WindowNode }) => {
     >
       {/* WindowSystem replaces this geometry each time the node is dirty */}
       <boxGeometry args={[0, 0, 0]} />
-      <meshStandardMaterial color="#d1d5db" />
+      <meshStandardNodeMaterial color="#d1d5db" />
     </mesh>
   )
 }

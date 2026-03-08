@@ -270,7 +270,7 @@ export const SlabTool: React.FC = () => {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <shapeGeometry args={[previewShape]} />
-          <meshBasicMaterial
+          <meshBasicNodeMaterial
             color="#818cf8"
             depthTest={false}
             opacity={0.15}

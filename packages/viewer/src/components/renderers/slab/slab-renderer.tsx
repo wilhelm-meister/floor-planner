@@ -33,7 +33,7 @@ export const SlabRenderer = ({ node }: { node: SlabNode }) => {
     <mesh ref={ref} castShadow receiveShadow {...handlers} onPointerDown={onPointerDown} onPointerUp={onPointerUp} visible={node.visible}>
       {/* SlabSystem will replace this geometry in the next frame */}
       <boxGeometry args={[0, 0, 0]} />
-      <meshStandardMaterial color="#e5e5e5" />
+      <meshStandardNodeMaterial color="#e5e5e5" />
     </mesh>
   )
 }

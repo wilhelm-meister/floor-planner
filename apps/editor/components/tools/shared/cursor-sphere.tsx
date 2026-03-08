@@ -38,13 +38,13 @@ export const CursorSphere = forwardRef<Group, CursorSphereProps>(function Cursor
         {/* Center dot */}
         <mesh renderOrder={2}>
           <circleGeometry args={[0.06, 32]} />
-          <meshBasicMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.9} />
+          <meshBasicNodeMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.9} />
         </mesh>
         
         {/* Outer ring / glow */}
         <mesh renderOrder={2}>
           <circleGeometry args={[0.2, 32]} />
-          <meshBasicMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.25} />
+          <meshBasicNodeMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.25} />
         </mesh>
       </group>
 
@@ -52,7 +52,7 @@ export const CursorSphere = forwardRef<Group, CursorSphereProps>(function Cursor
       {height > 0 && (
         <mesh position={[0, height / 2, 0]} renderOrder={2}>
           <cylinderGeometry args={[0.01, 0.01, height, 8]} />
-          <meshBasicMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.7} />
+          <meshBasicNodeMaterial color={color} depthTest={false} depthWrite={false} transparent opacity={0.7} />
         </mesh>
       )}
 

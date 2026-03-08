@@ -236,14 +236,14 @@ export function WalkthroughControls() {
           visible={false}
         >
           <planeGeometry args={[200, 200]} />
-          <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+          <meshBasicNodeMaterial transparent opacity={0} side={THREE.DoubleSide} />
         </mesh>
       )}
 
       {isPlacement && (
         <mesh ref={previewMeshRef} visible={false} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
           <circleGeometry args={[0.4, 32]} />
-          <meshBasicMaterial color="#a855f7" transparent opacity={0.5} side={THREE.DoubleSide} />
+          <meshBasicNodeMaterial color="#a855f7" transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       )}
     </>
