@@ -10,11 +10,26 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  let error = null
+  
+  try {
+    const supabase = await createSupabaseServerClient()
+    const result = await supabase.auth.getUser()
+    user = result.data?.user
+  } catch (e) {
+    console.error('[Home] Auth error:', e)
+    error = e instanceof Error ? e.message : 'Unknown error'
+  }
 
+  // Log for debugging
+  console.log('[Home] User:', user?.id, 'Error:', error)
+
+  if (error) {
+    // On error, show landing page
+    return <LandingPage />
+  }
+  
   if (user) return <CommunityHub />
   return <LandingPage />
 }
