@@ -4,6 +4,9 @@ import { cookies } from 'next/headers'
 /**
  * Creates a Supabase client for server-side use (SSR) with cookie-based sessions.
  * Use this for reading the current user's auth state in Server Components, Route Handlers, and Server Actions.
+ * 
+ * IMPORTANT: We only READ cookies here, never write them. Writing cookies
+ * is only allowed in Server Actions and Route Handlers per Next.js rules.
  */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -14,10 +17,10 @@ export async function createSupabaseServerClient() {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          )
+        // We do NOT set cookies in Server Components - that's only allowed in
+        // Server Actions and Route Handlers. The client will handle this.
+        setAll: () => {
+          // No-op: we intentionally don't set cookies here
         },
       },
     },
